@@ -120,3 +120,66 @@
 # plt.title("Distribution of Students' Marks")
 
 # plt.show()
+
+
+
+
+
+
+
+
+
+
+# Distribution using Seaborn
+
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+
+# df = sns.load_dataset("tips")
+
+# sns.kdeplot(data=df, x="total_bill")
+
+# plt.title("Distribution of Total Bill")
+# plt.xlabel("Total Bill")
+# plt.ylabel("Density")
+
+# plt.show()
+
+
+
+
+
+# Box Plot using Seaborn
+import seaborn as sns
+import matplotlib.pyplot as plt
+df = sns.load_dataset("tips")
+# sns.boxplot(
+#     data=df,
+#     x="day",
+#     y="total_bill"
+# )
+
+# plt.title("Total Bill by Day")
+# plt.xlabel("Day")
+# plt.ylabel("Total Bill")
+
+# plt.show()
+
+
+# sns.scatterplot(
+#     data=df,
+#     x="total_bill",
+#     y="tip"
+# )
+
+# plt.title("Total Bill vs Tip")
+# plt.xlabel("Total Bill")
+# plt.ylabel("Tip")
+
+# plt.show()
+
+
+
+Matplotlib gives you more control over how a graph is drawn,
+while Seaborn makes statistical and DataFrame-based visualizations
+easier and more convenient.
