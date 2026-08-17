@@ -1,0 +1,53 @@
+# ---------- Dependencies ----------
+node_modules/
+.pnp
+.pnp.js
+yarn-error.log
+
+# ---------- Backend / Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+!.env.example
+
+# ---------- Poetry ----------
+.poetry/
+poetry.toml
+
+# ---------- Frontend build ----------
+frontend/dist/
+frontend/build/
+frontend/node_modules/
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+vite.config.js.map
+
+# ---------- Caches / logs ----------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+npm-debug.log*
+
+# ---------- IDE / OS ----------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# ---------- Data (large generated datasets) ----------
+# Keep small sample data but ignore archives and very large intermediate files
+*.zip
+*.tar.gz
+archive.zip

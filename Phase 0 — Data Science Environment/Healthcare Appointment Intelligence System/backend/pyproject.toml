@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "healthcare-appointment-intelligence-backend"
+version = "1.0.0"
+description = "Healthcare Appointment Intelligence System - backend (FastAPI, MongoDB, ML predictions)"
+authors = ["Healthcare Intelligence Team"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+fastapi = "0.110.0"
+uvicorn = { version = "0.27.0", extras = ["standard"] }
+pydantic = "2.12.5"
+pydantic-settings = "2.8.1"
+motor = "3.7.1"
+joblib = "1.5.3"
+numpy = "*"
+pandas = "*"
+scikit-learn = "1.8.0"
+xgboost = "3.4.1"
+python-jose = { version = "3.3.0", extras = ["cryptography"] }
+bcrypt = "5.0.0"
+python-dotenv = "1.0.0"
+email-validator = "2.3.0"
+python-multipart = "0.0.9"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "9.1.1"
+httpx = "0.28.1"
+mongomock-motor = "*"
+
+[tool.poetry.scripts]
+start = "uvicorn app.main:app --reload"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
