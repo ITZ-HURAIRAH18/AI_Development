@@ -23,7 +23,6 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 @router.post(
     "/register",
-    response_model=TokenResponse,
     summary="Register a new user",
     description="Creates a user account and returns a JWT access token.",
 )
@@ -44,12 +43,11 @@ async def register(payload: RegisterRequest, db=Depends(get_database)):
     await create_user(db, user)
 
     token = create_access_token(user.id or "", user.role)
-    return TokenResponse(access_token=token, user=to_user_response(user))
+    return success(TokenResponse(access_token=token, user=to_user_response(user)).model_dump(mode="json"))
 
 
 @router.post(
     "/login",
-    response_model=TokenResponse,
     summary="Log in",
     description="Authenticates with email and password, returns a JWT access token.",
 )
@@ -62,17 +60,17 @@ async def login(payload: LoginRequest, db=Depends(get_database)):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
 
     token = create_access_token(str(user["_id"]), user.get("role", "staff"))
-    return TokenResponse(access_token=token, user=UserResponse(**user_response_from_doc(user)))
+    response = TokenResponse(access_token=token, user=UserResponse(**user_response_from_doc(user)))
+    return success(response.model_dump(mode="json"))
 
 
 @router.get(
     "/me",
-    response_model=UserResponse,
     summary="Current user",
     description="Returns the currently authenticated user.",
 )
 async def me(current_user=Depends(get_current_user)):
-    return UserResponse(**user_response_from_doc(current_user))
+    return success(UserResponse(**user_response_from_doc(current_user)).model_dump(mode="json"))
 
 
 @router.post(

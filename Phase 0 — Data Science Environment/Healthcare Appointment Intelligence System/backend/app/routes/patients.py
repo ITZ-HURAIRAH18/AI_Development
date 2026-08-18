@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.db.mongodb import get_database
-from app.schemas.patient import PatientCreate, PatientDetailResponse, PatientResponse, PatientUpdate
+from app.schemas.patient import PatientCreate, PatientResponse, PatientUpdate
 from app.services.patient_service import (
     get_patient_detail,
     list_patients,
@@ -33,7 +33,6 @@ async def list_patients_endpoint(
 
 @router.get(
     "/{patient_id}",
-    response_model=PatientDetailResponse,
     summary="Patient detail",
     description="Patient information with appointment history, no-show rate and risk status.",
 )
@@ -43,12 +42,11 @@ async def get_patient_endpoint(patient_id: str, db=Depends(get_database)):
     detail = await get_patient_detail(db, patient_id)
     if not detail:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return detail
+    return success(detail)
 
 
 @router.post(
     "",
-    response_model=PatientResponse,
     summary="Create patient",
     description="Creates a new patient record.",
 )
@@ -60,12 +58,11 @@ async def create_patient_endpoint(payload: PatientCreate, db=Depends(get_databas
     patient = Patient(**payload.model_dump())
     result = await db["patients"].insert_one(patient.model_dump(exclude={"id"}))
     patient.id = str(result.inserted_id)
-    return PatientResponse(**patient.model_dump())
+    return success(PatientResponse(**patient.model_dump()).model_dump(mode="json"))
 
 
 @router.put(
     "/{patient_id}",
-    response_model=PatientResponse,
     summary="Update patient",
     description="Updates an existing patient record.",
 )
@@ -88,7 +85,7 @@ async def update_patient_endpoint(patient_id: str, payload: PatientUpdate, db=De
         raise HTTPException(status_code=404, detail="Patient not found")
 
     doc = await db["patients"].find_one({"_id": oid})
-    return PatientResponse(**patient_response_from_doc(doc))
+    return success(PatientResponse(**patient_response_from_doc(doc)).model_dump(mode="json"))
 
 
 @router.delete(

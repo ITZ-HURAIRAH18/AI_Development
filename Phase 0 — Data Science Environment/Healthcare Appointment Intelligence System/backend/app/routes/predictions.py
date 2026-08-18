@@ -6,7 +6,6 @@ from app.schemas.prediction import (
     FullPredictionResponse,
     NoShowRequest,
     NoShowResponse,
-    PredictionHistoryResponse,
     WaitingTimeRequest,
     WaitingTimeResponse,
 )
@@ -20,7 +19,6 @@ router = APIRouter(prefix="/api/predictions", tags=["Predictions"])
 
 @router.post(
     "/no-show",
-    response_model=NoShowResponse,
     summary="No-show prediction",
     description="Predicts the probability that a patient will not attend their appointment.",
 )
@@ -28,12 +26,11 @@ async def no_show(payload: NoShowRequest, db=Depends(get_database)):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     probability, risk = predict_no_show(payload)
-    return NoShowResponse(probability=probability, risk=risk)
+    return success(NoShowResponse(probability=probability, risk=risk).model_dump())
 
 
 @router.post(
     "/waiting-time",
-    response_model=WaitingTimeResponse,
     summary="Waiting-time prediction",
     description="Predicts the expected waiting time in minutes for an appointment.",
 )
@@ -41,12 +38,11 @@ async def waiting_time(payload: WaitingTimeRequest, db=Depends(get_database)):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     value = predict_waiting_time(payload)
-    return WaitingTimeResponse(expected_waiting_time=value)
+    return success(WaitingTimeResponse(expected_waiting_time=value).model_dump())
 
 
 @router.post(
     "/full",
-    response_model=FullPredictionResponse,
     summary="Combined prediction",
     description=(
         "Runs the no-show model, waiting-time model, and scheduling risk logic together. "
@@ -65,7 +61,7 @@ async def full_prediction(payload: FullPredictionRequest, db=Depends(get_databas
     if payload.appointment_id:
         await store_prediction(db, payload.appointment_id, result)
 
-    return result
+    return success(result.model_dump())
 
 
 @router.get(

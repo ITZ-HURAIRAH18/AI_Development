@@ -4,7 +4,6 @@ from app.db.mongodb import get_database
 from app.models.appointment import Appointment
 from app.schemas.appointment import (
     AppointmentCreate,
-    AppointmentListResponse,
     AppointmentResponse,
     AppointmentStatusUpdate,
 )
@@ -21,7 +20,6 @@ router = APIRouter(prefix="/api/appointments", tags=["Appointments"])
 
 @router.get(
     "",
-    response_model=AppointmentListResponse,
     summary="List appointments",
     description="Paginated, filterable list of appointments with prediction data.",
 )
@@ -41,7 +39,7 @@ async def list_appointments_endpoint(
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
-    return await list_appointments(
+    result = await list_appointments(
         db,
         search=search,
         clinic_id=clinic_id,
@@ -55,6 +53,7 @@ async def list_appointments_endpoint(
         sort_by=sort_by,
         sort_order=sort_order,
     )
+    return success(result)
 
 
 @router.get(
@@ -73,7 +72,6 @@ async def get_appointment_endpoint(appointment_id: str, db=Depends(get_database)
 
 @router.post(
     "",
-    response_model=AppointmentResponse,
     summary="Create appointment",
     description="Creates a new appointment.",
 )
@@ -88,12 +86,11 @@ async def create_appointment_endpoint(payload: AppointmentCreate, db=Depends(get
     appointment = Appointment(**payload.model_dump())
     result = await db["appointments"].insert_one(appointment.model_dump(exclude={"id"}))
     appointment.id = str(result.inserted_id)
-    return AppointmentResponse(**appointment.model_dump())
+    return success(AppointmentResponse(**appointment.model_dump()).model_dump(mode="json"))
 
 
 @router.put(
     "/{appointment_id}/status",
-    response_model=AppointmentResponse,
     summary="Update appointment status",
     description="Updates the status of an appointment (Scheduled, Completed, No-show, Cancelled).",
 )
@@ -114,7 +111,8 @@ async def update_status_endpoint(appointment_id: str, payload: AppointmentStatus
     doc = await db["appointments"].find_one({"_id": oid})
     from app.models import serialize_doc
 
-    return AppointmentResponse(**appointment_response_from_doc(serialize_doc(doc)))
+    response = AppointmentResponse(**appointment_response_from_doc(serialize_doc(doc)))
+    return success(response.model_dump(mode="json"))
 
 
 @router.post(
