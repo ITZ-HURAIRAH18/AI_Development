@@ -47,7 +47,7 @@ NO_SHOW_MODEL_PATH = BACKEND_DIR / "app" / "ml" / "no_show_model.pkl"
 WAITING_MODEL_PATH = BACKEND_DIR / "app" / "ml" / "waiting_time_model.pkl"
 
 CHUNK_SIZE = 5000
-BULK_SIZE = 1000
+BULK_SIZE = 5000
 
 CLINICS = {
     "C01": {"name": "Central Health Center", "location": "City Center"},
@@ -117,6 +117,10 @@ def ensure_indexes(db) -> None:
     db["predictions"].create_index([("appointment_id", ASCENDING)], unique=True)
 
 
+def existing_keys(collection, key_field: str) -> set:
+    return {doc[key_field] for doc in collection.find({}, {key_field: 1, "_id": 0}) if key_field in doc}
+
+
 def seed_users(db) -> None:
     if db["users"].count_documents({}) > 0:
         print("[users] Collection already has users - skipping seed.")
@@ -139,29 +143,48 @@ def seed_users(db) -> None:
 
 
 def seed_clinics(db) -> None:
-    ops = []
+    known = existing_keys(db["clinics"], "clinic_id")
+    docs = []
     for clinic_id, info in CLINICS.items():
-        doc = {
-            "clinic_id": clinic_id,
-            "name": info["name"],
-            "location": info["location"],
-            "doctor_ids": [],
-        }
-        ops.append(ReplaceOne({"clinic_id": clinic_id}, doc, upsert=True))
-    db["clinics"].bulk_write(ops, ordered=False)
-    print(f"[clinics] Upserted {len(ops)} clinics.")
+        if clinic_id in known:
+            continue
+        docs.append(
+            {
+                "clinic_id": clinic_id,
+                "name": info["name"],
+                "location": info["location"],
+                "doctor_ids": [],
+            }
+        )
+    if docs:
+        db["clinics"].insert_many(docs, ordered=False)
+    print(f"[clinics] Inserted {len(docs)} new clinics.")
 
 
-def bulk_upsert(collection, key_field: str, docs: list[dict]) -> None:
-    ops = [ReplaceOne({key_field: doc[key_field]}, doc, upsert=True) for doc in docs]
-    for start in range(0, len(ops), BULK_SIZE):
-        collection.bulk_write(ops[start : start + BULK_SIZE], ordered=False)
+def bulk_insert_new(collection, key_field: str, docs: list[dict], known_keys: set) -> int:
+    """Insert only documents whose key is not already stored (idempotent, fast)."""
+    fresh = [doc for doc in docs if doc[key_field] not in known_keys]
+    if not fresh:
+        return 0
+    try:
+        result = collection.insert_many(fresh, ordered=False)
+        known_keys.update(doc[key_field] for doc in fresh)
+        return len(result.inserted_ids)
+    except Exception:
+        # Fall back to per-document upserts so a duplicate never aborts the run.
+        inserted = 0
+        for doc in fresh:
+            collection.replace_one({key_field: doc[key_field]}, doc, upsert=True)
+            known_keys.add(doc[key_field])
+            inserted += 1
+        return inserted
 
 
 class DoctorRegistry:
     def __init__(self, db):
         self.db = db
         self.seen: dict[str, dict] = {}
+        self.known = existing_keys(db["doctors"], "doctor_id")
 
     def register(self, doctor_id: str) -> dict | None:
         if not doctor_id or doctor_id in self.seen:
@@ -178,10 +201,10 @@ class DoctorRegistry:
         return doc
 
     def flush(self) -> None:
-        if not self.seen:
-            return
-        bulk_upsert(self.db["doctors"], "doctor_id", list(self.seen.values()))
-        print(f"[doctors] Upserted {len(self.seen)} doctors.")
+        new_docs = [doc for doc in self.seen.values() if doc["doctor_id"] not in self.known]
+        if new_docs:
+            bulk_insert_new(self.db["doctors"], "doctor_id", new_docs, self.known)
+        # Always refresh the clinic -> doctor links (cheap, 5 docs).
         self._link_to_clinics()
 
     def _link_to_clinics(self) -> None:
@@ -200,6 +223,8 @@ class PatientRegistry:
         self.db = db
         self.cache: dict[str, str] = {}
         self.pending: dict[str, dict] = {}
+        self.known = existing_keys(db["patients"], "patient_id")
+        self.new_count = 0
 
     def resolve(self, patient_id: str, age: int, gender: str, neighbourhood: str) -> str:
         cached = self.cache.get(patient_id)
@@ -224,8 +249,9 @@ class PatientRegistry:
     def flush(self) -> None:
         if not self.pending:
             return
-        bulk_upsert(self.db["patients"], "patient_id", list(self.pending.values()))
-        print(f"[patients] Upserted {len(self.pending)} patients.")
+        new_docs = [doc for doc in self.pending.values() if doc["patient_id"] not in self.known]
+        if new_docs:
+            self.new_count += bulk_insert_new(self.db["patients"], "patient_id", new_docs, self.known)
         stored = self.db["patients"].find(
             {"patient_id": {"$in": list(self.pending.keys())}}, {"_id": 1, "patient_id": 1}
         )
@@ -362,8 +388,11 @@ def main() -> None:
     wt_model = joblib.load(WAITING_MODEL_PATH)
 
     reader = pd.read_csv(CSV_PATH, chunksize=min(CHUNK_SIZE, args.limit) if args.limit else CHUNK_SIZE)
+    known_appointments = existing_keys(db["appointments"], "appointment_id")
+    known_predictions = set() if args.skip_predictions else existing_keys(db["predictions"], "appointment_id")
     total_rows = 0
     total_predictions = 0
+    skipped = 0
 
     for chunk_number, chunk in enumerate(reader, start=1):
         if args.limit and total_rows >= args.limit:
@@ -388,26 +417,33 @@ def main() -> None:
 
         chunk_docs = []
         for _, row in chunk.iterrows():
+            appointment_key = str(row["AppointmentID"])
+            if appointment_key in known_appointments and (
+                args.skip_predictions or appointment_key in known_predictions
+            ):
+                skipped += 1
+                continue
             patient_oid = patients.cache.get(str(row["PatientId"]))
             if not patient_oid:
                 continue
             doc = row_to_appointment_doc(row, patient_oid)
-            doc["_id"] = stable_object_id(doc["appointment_id"])  # stable so re-runs stay consistent
+            doc["_id"] = stable_object_id(appointment_key)  # stable so re-runs stay consistent
             chunk_docs.append(doc)
 
         if chunk_docs:
-            bulk_upsert(db["appointments"], "appointment_id", chunk_docs)
+            inserted = bulk_insert_new(db["appointments"], "appointment_id", chunk_docs, known_appointments)
             total_rows += len(chunk_docs)
 
             if not args.skip_predictions:
                 prediction_docs = build_prediction_docs(chunk_docs, ns_model, wt_model)
-                bulk_upsert(db["predictions"], "appointment_id", prediction_docs)
-                total_predictions += len(prediction_docs)
+                total_predictions += bulk_insert_new(
+                    db["predictions"], "appointment_id", prediction_docs, known_predictions
+                )
 
         print(
-            f"[chunk {chunk_number}] imported={total_rows} rows, "
-            f"predictions={total_predictions}",
-            end="\r",
+            f"[chunk {chunk_number}] processed={total_rows + skipped} rows "
+            f"({skipped} already imported), new predictions={total_predictions}",
+            flush=True,
         )
 
     print()
