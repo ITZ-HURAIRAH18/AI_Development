@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.security import get_current_user, require_admin
 from app.db.mongodb import get_database
 from app.models.doctor import Doctor
 from app.services.doctor_service import get_doctor_detail, list_doctors
@@ -17,6 +18,7 @@ async def list_doctors_endpoint(
     search: str = Query(""),
     clinic_id: str = Query("", description="Filter by clinic id"),
     db=Depends(get_database),
+    current_user=Depends(get_current_user),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -28,7 +30,11 @@ async def list_doctors_endpoint(
     summary="Doctor detail",
     description="Doctor information with workload stats and trends.",
 )
-async def get_doctor_endpoint(doctor_id: str, db=Depends(get_database)):
+async def get_doctor_endpoint(
+    doctor_id: str,
+    db=Depends(get_database),
+    current_user=Depends(get_current_user),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     detail = await get_doctor_detail(db, doctor_id)
@@ -42,7 +48,11 @@ async def get_doctor_endpoint(doctor_id: str, db=Depends(get_database)):
     summary="Create doctor",
     description="Creates a new doctor record.",
 )
-async def create_doctor_endpoint(payload: dict, db=Depends(get_database)):
+async def create_doctor_endpoint(
+    payload: dict,
+    db=Depends(get_database),
+    current_user=Depends(require_admin),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     try:

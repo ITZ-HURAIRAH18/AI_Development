@@ -1,5 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.security import (
+    get_current_user,
+    require_admin,
+    require_admin_or_doctor,
+)
 from app.db.mongodb import get_database
 from app.services.analytics_service import (
     advanced_analytics,
@@ -24,6 +29,7 @@ async def dashboard(
     start: str = Query("", description="ISO date range start (YYYY-MM-DD)"),
     end: str = Query("", description="ISO date range end (YYYY-MM-DD)"),
     db=Depends(get_database),
+    current_user=Depends(get_current_user),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -40,6 +46,7 @@ async def charts(
     start: str = Query(""),
     end: str = Query(""),
     db=Depends(get_database),
+    current_user=Depends(get_current_user),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -56,6 +63,7 @@ async def clinic_utilization(
     start: str = Query(""),
     end: str = Query(""),
     db=Depends(get_database),
+    current_user=Depends(require_admin),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -73,6 +81,7 @@ async def doctor_workload(
     start: str = Query(""),
     end: str = Query(""),
     db=Depends(get_database),
+    current_user=Depends(require_admin_or_doctor),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -91,6 +100,7 @@ async def waiting_time(
     start: str = Query(""),
     end: str = Query(""),
     db=Depends(get_database),
+    current_user=Depends(get_current_user),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -107,6 +117,7 @@ async def scheduling_risk(
     start: str = Query(""),
     end: str = Query(""),
     db=Depends(get_database),
+    current_user=Depends(require_admin_or_doctor),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -123,6 +134,7 @@ async def advanced(
     start: str = Query(""),
     end: str = Query(""),
     db=Depends(get_database),
+    current_user=Depends(require_admin),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.security import get_current_user
 from app.db.mongodb import get_database
 from app.schemas.prediction import (
     FullPredictionRequest,
@@ -22,7 +23,11 @@ router = APIRouter(prefix="/api/predictions", tags=["Predictions"])
     summary="No-show prediction",
     description="Predicts the probability that a patient will not attend their appointment.",
 )
-async def no_show(payload: NoShowRequest, db=Depends(get_database)):
+async def no_show(
+    payload: NoShowRequest,
+    db=Depends(get_database),
+    current_user=Depends(get_current_user),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     probability, risk = predict_no_show(payload)
@@ -34,7 +39,11 @@ async def no_show(payload: NoShowRequest, db=Depends(get_database)):
     summary="Waiting-time prediction",
     description="Predicts the expected waiting time in minutes for an appointment.",
 )
-async def waiting_time(payload: WaitingTimeRequest, db=Depends(get_database)):
+async def waiting_time(
+    payload: WaitingTimeRequest,
+    db=Depends(get_database),
+    current_user=Depends(get_current_user),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     value = predict_waiting_time(payload)
@@ -49,7 +58,11 @@ async def waiting_time(payload: WaitingTimeRequest, db=Depends(get_database)):
         "When an appointment_id is provided the result is stored in MongoDB."
     ),
 )
-async def full_prediction(payload: FullPredictionRequest, db=Depends(get_database)):
+async def full_prediction(
+    payload: FullPredictionRequest,
+    db=Depends(get_database),
+    current_user=Depends(get_current_user),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
 
@@ -74,6 +87,7 @@ async def prediction_history(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     db=Depends(get_database),
+    current_user=Depends(get_current_user),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")

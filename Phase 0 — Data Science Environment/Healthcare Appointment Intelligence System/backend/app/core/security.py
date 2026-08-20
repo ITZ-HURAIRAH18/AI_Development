@@ -94,3 +94,35 @@ async def get_current_user(
             detail="User no longer exists",
         )
     return user
+
+
+# ------------------------------------------------------------------
+# Role-based access control
+# ------------------------------------------------------------------
+
+def require_roles(*allowed_roles: str):
+    """Dependency factory: allows access only to users with one of the given roles."""
+
+    async def role_dependency(current_user=Depends(get_current_user)):
+        user_role = current_user.get("role", "")
+        if allowed_roles and user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to perform this action",
+            )
+        return current_user
+
+    return role_dependency
+
+
+# Any authenticated user (admin, doctor or staff).
+require_authenticated = get_current_user
+
+# Read/write access reserved for administrators.
+require_admin = require_roles("admin")
+
+# Front-desk operations (patient registration, appointment booking).
+require_admin_or_staff = require_roles("admin", "staff")
+
+# Clinical + management operations.
+require_admin_or_doctor = require_roles("admin", "doctor")

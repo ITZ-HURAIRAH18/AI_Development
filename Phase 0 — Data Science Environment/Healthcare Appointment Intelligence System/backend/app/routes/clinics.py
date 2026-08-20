@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.security import get_current_user, require_admin
 from app.db.mongodb import get_database
 from app.models.clinic import Clinic
 from app.services.clinic_service import get_clinic_detail, list_clinics
@@ -13,7 +14,10 @@ router = APIRouter(prefix="/api/clinics", tags=["Clinics"])
     summary="List clinics",
     description="Lists clinics with utilization and operational statistics.",
 )
-async def list_clinics_endpoint(db=Depends(get_database)):
+async def list_clinics_endpoint(
+    db=Depends(get_database),
+    current_user=Depends(get_current_user),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     return success(await list_clinics(db))
@@ -24,7 +28,11 @@ async def list_clinics_endpoint(db=Depends(get_database)):
     summary="Clinic detail",
     description="Clinic overview including doctors, utilization and risk distribution.",
 )
-async def get_clinic_endpoint(clinic_id: str, db=Depends(get_database)):
+async def get_clinic_endpoint(
+    clinic_id: str,
+    db=Depends(get_database),
+    current_user=Depends(get_current_user),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     detail = await get_clinic_detail(db, clinic_id)
@@ -38,7 +46,11 @@ async def get_clinic_endpoint(clinic_id: str, db=Depends(get_database)):
     summary="Create clinic",
     description="Creates a new clinic record.",
 )
-async def create_clinic_endpoint(payload: dict, db=Depends(get_database)):
+async def create_clinic_endpoint(
+    payload: dict,
+    db=Depends(get_database),
+    current_user=Depends(require_admin),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     try:

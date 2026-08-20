@@ -1,8 +1,10 @@
+export type Role = 'admin' | 'doctor' | 'staff'
+
 export interface User {
   id: string
   name: string
   email: string
-  role: string
+  role: Role | string
   created_at: string
 }
 

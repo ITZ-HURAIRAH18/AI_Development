@@ -1,5 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.security import (
+    get_current_user,
+    require_admin_or_staff,
+    require_authenticated,
+)
 from app.db.mongodb import get_database
 from app.models.appointment import Appointment
 from app.schemas.appointment import (
@@ -36,6 +41,7 @@ async def list_appointments_endpoint(
     sort_by: str = Query("appointment_day"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     db=Depends(get_database),
+    current_user=Depends(require_authenticated),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -61,7 +67,11 @@ async def list_appointments_endpoint(
     summary="Appointment detail",
     description="Full appointment detail including patient, doctor, clinic and prediction.",
 )
-async def get_appointment_endpoint(appointment_id: str, db=Depends(get_database)):
+async def get_appointment_endpoint(
+    appointment_id: str,
+    db=Depends(get_database),
+    current_user=Depends(require_authenticated),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     detail = await get_appointment_detail(db, appointment_id)
@@ -75,7 +85,11 @@ async def get_appointment_endpoint(appointment_id: str, db=Depends(get_database)
     summary="Create appointment",
     description="Creates a new appointment.",
 )
-async def create_appointment_endpoint(payload: AppointmentCreate, db=Depends(get_database)):
+async def create_appointment_endpoint(
+    payload: AppointmentCreate,
+    db=Depends(get_database),
+    current_user=Depends(require_admin_or_staff),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
 
@@ -94,7 +108,12 @@ async def create_appointment_endpoint(payload: AppointmentCreate, db=Depends(get
     summary="Update appointment status",
     description="Updates the status of an appointment (Scheduled, Completed, No-show, Cancelled).",
 )
-async def update_status_endpoint(appointment_id: str, payload: AppointmentStatusUpdate, db=Depends(get_database)):
+async def update_status_endpoint(
+    appointment_id: str,
+    payload: AppointmentStatusUpdate,
+    db=Depends(get_database),
+    current_user=Depends(require_authenticated),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     from bson import ObjectId
@@ -120,7 +139,11 @@ async def update_status_endpoint(appointment_id: str, payload: AppointmentStatus
     summary="Predict for an appointment",
     description="Runs the full prediction for an existing appointment and stores the result.",
 )
-async def predict_for_appointment_endpoint(appointment_id: str, db=Depends(get_database)):
+async def predict_for_appointment_endpoint(
+    appointment_id: str,
+    db=Depends(get_database),
+    current_user=Depends(require_authenticated),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     from bson import ObjectId

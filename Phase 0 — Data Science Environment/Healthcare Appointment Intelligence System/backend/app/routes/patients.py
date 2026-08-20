@@ -1,5 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.core.security import (
+    get_current_user,
+    require_admin,
+    require_admin_or_staff,
+)
 from app.db.mongodb import get_database
 from app.schemas.patient import PatientCreate, PatientResponse, PatientUpdate
 from app.services.patient_service import (
@@ -25,6 +30,7 @@ async def list_patients_endpoint(
     sort_by: str = Query("created_at"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     db=Depends(get_database),
+    current_user=Depends(get_current_user),
 ):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
@@ -36,7 +42,11 @@ async def list_patients_endpoint(
     summary="Patient detail",
     description="Patient information with appointment history, no-show rate and risk status.",
 )
-async def get_patient_endpoint(patient_id: str, db=Depends(get_database)):
+async def get_patient_endpoint(
+    patient_id: str,
+    db=Depends(get_database),
+    current_user=Depends(get_current_user),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     detail = await get_patient_detail(db, patient_id)
@@ -50,7 +60,11 @@ async def get_patient_endpoint(patient_id: str, db=Depends(get_database)):
     summary="Create patient",
     description="Creates a new patient record.",
 )
-async def create_patient_endpoint(payload: PatientCreate, db=Depends(get_database)):
+async def create_patient_endpoint(
+    payload: PatientCreate,
+    db=Depends(get_database),
+    current_user=Depends(require_admin_or_staff),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     from app.models.patient import Patient
@@ -66,7 +80,12 @@ async def create_patient_endpoint(payload: PatientCreate, db=Depends(get_databas
     summary="Update patient",
     description="Updates an existing patient record.",
 )
-async def update_patient_endpoint(patient_id: str, payload: PatientUpdate, db=Depends(get_database)):
+async def update_patient_endpoint(
+    patient_id: str,
+    payload: PatientUpdate,
+    db=Depends(get_database),
+    current_user=Depends(require_admin_or_staff),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     from bson import ObjectId
@@ -93,7 +112,11 @@ async def update_patient_endpoint(patient_id: str, payload: PatientUpdate, db=De
     summary="Delete patient",
     description="Deletes a patient record.",
 )
-async def delete_patient_endpoint(patient_id: str, db=Depends(get_database)):
+async def delete_patient_endpoint(
+    patient_id: str,
+    db=Depends(get_database),
+    current_user=Depends(require_admin),
+):
     if db is None:
         raise HTTPException(status_code=503, detail="Database is not available")
     from bson import ObjectId
