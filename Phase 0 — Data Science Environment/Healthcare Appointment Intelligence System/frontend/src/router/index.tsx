@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '@/layouts/AppLayout'
-import { RequireAuth, RedirectIfAuthenticated } from '@/auth/RequireAuth'
+import { RequireAuth, RequireRole, RedirectIfAuthenticated } from '@/auth/RequireAuth'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { DashboardPage } from '@/pages/DashboardPage'
@@ -48,15 +48,64 @@ export const router = createBrowserRouter([
       { path: 'appointments', element: <AppointmentsPage /> },
       { path: 'predictions', element: <PredictionsPage /> },
       { path: 'waiting-time', element: <WaitingTimePage /> },
-      { path: 'scheduling-risk', element: <SchedulingRiskPage /> },
-      { path: 'clinic-utilization', element: <ClinicUtilizationPage /> },
+      {
+        path: 'scheduling-risk',
+        element: (
+          <RequireRole roles={['admin', 'doctor']}>
+            <SchedulingRiskPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'clinic-utilization',
+        element: (
+          <RequireRole roles={['admin']}>
+            <ClinicUtilizationPage />
+          </RequireRole>
+        ),
+      },
       { path: 'patients', element: <PatientsPage /> },
       { path: 'patients/:id', element: <PatientDetailPage /> },
-      { path: 'doctors', element: <DoctorsPage /> },
-      { path: 'doctors/:id', element: <DoctorDetailPage /> },
-      { path: 'clinics', element: <ClinicsPage /> },
-      { path: 'clinics/:id', element: <ClinicDetailPage /> },
-      { path: 'analytics', element: <AnalyticsPage /> },
+      {
+        path: 'doctors',
+        element: (
+          <RequireRole roles={['admin', 'doctor']}>
+            <DoctorsPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'doctors/:id',
+        element: (
+          <RequireRole roles={['admin', 'doctor']}>
+            <DoctorDetailPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'clinics',
+        element: (
+          <RequireRole roles={['admin']}>
+            <ClinicsPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'clinics/:id',
+        element: (
+          <RequireRole roles={['admin']}>
+            <ClinicDetailPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: 'analytics',
+        element: (
+          <RequireRole roles={['admin']}>
+            <AnalyticsPage />
+          </RequireRole>
+        ),
+      },
       { path: 'settings', element: <SettingsPage /> },
     ],
   },

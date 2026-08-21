@@ -71,7 +71,7 @@ export function PatientDetailPage() {
                 { key: 'status', label: 'Status' },
               ]}
             >
-              {data.history.map((item: Appointment) => (
+              {(data.history ?? []).map((item: Appointment) => (
                 <tr key={item.id}>
                   <td className="px-4 py-3 font-medium text-primary-700">{item.appointment_id}</td>
                   <td className="px-4 py-3 text-charcoal">{formatDate(item.appointment_day)}</td>

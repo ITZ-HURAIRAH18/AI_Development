@@ -22,19 +22,29 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthContext'
 import { clinicApi } from '@/services/clinicApi'
-import type { Clinic } from '@/types'
+import type { Clinic, Role } from '@/types'
 
-const NAV_ITEMS = [
+/**
+ * Sidebar navigation with role-based access control.
+ * Items without a `roles` entry are visible to every authenticated role.
+ */
+const NAV_ITEMS: Array<{
+  to: string
+  label: string
+  icon: typeof LayoutDashboard
+  matchPaths: string[]
+  roles?: Role[]
+}> = [
   { to: '/', label: 'Overview', icon: LayoutDashboard, matchPaths: ['/'] },
   { to: '/appointments', label: 'Appointments', icon: CalendarClock, matchPaths: ['/appointments'] },
   { to: '/predictions', label: 'Predictions', icon: Activity, matchPaths: ['/predictions'] },
   { to: '/waiting-time', label: 'Waiting Time', icon: Clock, matchPaths: ['/waiting-time'] },
-  { to: '/scheduling-risk', label: 'Scheduling Risk', icon: ShieldAlert, matchPaths: ['/scheduling-risk'] },
-  { to: '/clinic-utilization', label: 'Clinic Utilization', icon: Building2, matchPaths: ['/clinic-utilization'] },
+  { to: '/scheduling-risk', label: 'Scheduling Risk', icon: ShieldAlert, matchPaths: ['/scheduling-risk'], roles: ['admin', 'doctor'] },
+  { to: '/clinic-utilization', label: 'Clinic Utilization', icon: Building2, matchPaths: ['/clinic-utilization'], roles: ['admin'] },
   { to: '/patients', label: 'Patients', icon: Users, matchPaths: ['/patients'] },
-  { to: '/doctors', label: 'Doctors', icon: Stethoscope, matchPaths: ['/doctors'] },
-  { to: '/clinics', label: 'Clinics', icon: Building, matchPaths: ['/clinics'] },
-  { to: '/analytics', label: 'Analytics', icon: ChartNoAxesCombined, matchPaths: ['/analytics'] },
+  { to: '/doctors', label: 'Doctors', icon: Stethoscope, matchPaths: ['/doctors'], roles: ['admin', 'doctor'] },
+  { to: '/clinics', label: 'Clinics', icon: Building, matchPaths: ['/clinics'], roles: ['admin'] },
+  { to: '/analytics', label: 'Analytics', icon: ChartNoAxesCombined, matchPaths: ['/analytics'], roles: ['admin'] },
   { to: '/settings', label: 'Settings', icon: Settings, matchPaths: ['/settings'] },
 ]
 
@@ -67,6 +77,10 @@ export function AppLayout() {
   }, [])
 
   const pageTitle = TITLES[location.pathname] ?? 'Healthcare Intelligence'
+
+  const visibleNavItems = NAV_ITEMS.filter(
+    (item) => !item.roles || (user?.role ? item.roles.includes(user.role as Role) : false),
+  )
 
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault()
@@ -102,7 +116,7 @@ export function AppLayout() {
 
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
-            {NAV_ITEMS.map((item) => (
+            {visibleNavItems.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
