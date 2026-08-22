@@ -89,31 +89,42 @@ async def _time_series(appointments, match: dict, field: str, value_expr: Any) -
     )
 
 
+def _rounded(value: Any, digits: int = 1) -> float:
+    try:
+        return round(float(value), digits)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 async def dashboard_charts(db, clinic_id: str = "", start: str = "", end: str = "") -> dict:
     match = _base_match(clinic_id, "", start, end)
     appointments = db["appointments"]
 
     volume = await _time_series(appointments, match, "appointments", {"$sum": 1})
-    no_show_rate = await _time_series(
+
+    # No-show rate per day: aggregate raw counts first, round in Python.
+    # ($round / $multiply / $divide are not valid inside a $group stage.)
+    no_show_rows = await aggregate_to_list(
         appointments,
-        match,
-        "no_show_rate",
-        {
-            "$round": [
-                {
-                    "$multiply": [
-                        {"$divide": [
-                            {"$sum": {"$cond": [{"$eq": ["$status", "No-show"]}, 1, 0]}},
-                            {"$sum": 1},
-                        ]},
-                        100,
-                    ]
-                },
-                1,
-            ]
-        },
+        [
+            {"$match": match},
+            {
+                "$group": {
+                    "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$appointment_day"}},
+                    "total": {"$sum": 1},
+                    "no_shows": {"$sum": {"$cond": [{"$eq": ["$status", "No-show"]}, 1, 0]}},
+                }
+            },
+            {"$sort": {"_id": 1}},
+        ],
     )
-    waiting_trend = await _time_series(appointments, match, "waiting_time", {"$round": [{"$avg": "$waiting_time"}, 1]})
+    no_show_rate = [
+        {"_id": r.get("_id"), "value": _rounded(r.get("no_shows") / r.get("total") * 100 if r.get("total") else 0)}
+        for r in no_show_rows
+    ]
+
+    waiting_rows = await _time_series(appointments, match, "waiting_time", {"$avg": "$waiting_time"})
+    waiting_trend = [{"_id": r.get("_id"), "value": _rounded(r.get("value"))} for r in waiting_rows]
     clinic_utilization = await compute_clinic_utilization(db, clinic_id=clinic_id or None, start_date=start or None, end_date=end or None)
     doctor_workload = await compute_doctor_workload(db, clinic_id=clinic_id or None, start_date=start or None, end_date=end or None)
 
@@ -156,11 +167,12 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
             "count": n,
         }
 
-    # Distribution via bucket
+    # Distribution via bucket (skip documents without a numeric waiting_time,
+    # because $bucket fails on null values)
     distribution = await aggregate_to_list(
         appointments,
         [
-            {"$match": match},
+            {"$match": {**match, "waiting_time": {"$type": "number"}}},
             {
                 "$bucket": {
                     "groupBy": "$waiting_time",
@@ -175,7 +187,7 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
         appointments,
         [
             {"$match": match},
-            {"$group": {"_id": "$clinic_id", "average": {"$round": [{"$avg": "$waiting_time"}, 1]}}},
+            {"$group": {"_id": "$clinic_id", "average": {"$avg": "$waiting_time"}}},
             {"$sort": {"_id": 1}},
         ],
     )
@@ -183,18 +195,23 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
         appointments,
         [
             {"$match": match},
-            {"$group": {"_id": "$doctor_id", "average": {"$round": [{"$avg": "$waiting_time"}, 1]}}},
-            {"$sort": {"average": -1}},
+            {"$group": {"_id": "$doctor_id", "average": {"$avg": "$waiting_time"}}},
         ],
     )
-    trend = await _time_series(appointments, match, "waiting_time", {"$round": [{"$avg": "$waiting_time"}, 1]})
-    trend = [{"date": r.get("_id"), "waiting_time": r.get("value")} for r in trend]
+    by_doctor.sort(key=lambda r: r.get("average") or 0, reverse=True)
+
+    trend_rows = await _time_series(appointments, match, "waiting_time", {"$avg": "$waiting_time"})
+    trend = [{"date": r.get("_id"), "waiting_time": _rounded(r.get("value"))} for r in trend_rows]
 
     return {
         "stats": stats,
         "distribution": distribution,
-        "by_clinic": [{"clinic_id": r.get("_id"), "average": r.get("average")} for r in by_clinic],
-        "by_doctor": [{"doctor_id": r.get("_id"), "average": r.get("average")} for r in by_doctor],
+        "by_clinic": [
+            {"clinic_id": r.get("_id"), "average": _rounded(r.get("average"))} for r in by_clinic
+        ],
+        "by_doctor": [
+            {"doctor_id": r.get("_id"), "average": _rounded(r.get("average"), 2)} for r in by_doctor
+        ],
         "trend": trend,
     }
 
@@ -227,12 +244,14 @@ async def scheduling_risk_analytics(db, clinic_id: str = "", start: str = "", en
     high_risk_items = []
     for pred in high_risk:
         item = serialize_doc(pred)
-        appointment = await db["appointments"].find_one({"_id": pred.get("appointment_id") and _to_object_id(pred["appointment_id"])})
+        oid = _to_object_id(pred.get("appointment_id"))
+        appointment = await db["appointments"].find_one({"_id": oid}) if oid is not None else None
         patient = None
         doctor = None
         clinic = None
         if appointment:
-            patient = await db["patients"].find_one({"_id": _to_object_id(appointment.get("patient_id"))})
+            patient_oid = _to_object_id(appointment.get("patient_id"))
+            patient = await db["patients"].find_one({"_id": patient_oid}) if patient_oid is not None else None
             doctor = await db["doctors"].find_one({"doctor_id": appointment.get("doctor_id")})
             clinic = await db["clinics"].find_one({"clinic_id": appointment.get("clinic_id")})
         item["patient_name"] = patient.get("name", "Unknown") if patient else "Unknown"
