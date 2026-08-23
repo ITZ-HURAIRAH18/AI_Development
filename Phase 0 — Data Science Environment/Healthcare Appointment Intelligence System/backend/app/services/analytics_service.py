@@ -156,8 +156,16 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
     appointments = db["appointments"]
 
     cursor = appointments.find(match, {"waiting_time": 1})
-    values = [doc.get("waiting_time") for doc in await cursor.to_list(length=None)]
-    values = [float(v) for v in values if v is not None]
+    raw_values = [doc.get("waiting_time") for doc in await cursor.to_list(length=None)]
+    values: list[float] = []
+    for value in raw_values:
+        if value is None:
+            continue
+        try:
+            values.append(float(value))
+        except (TypeError, ValueError):
+            # Ignore malformed waiting-time values instead of failing the endpoint.
+            continue
 
     if not values:
         stats = {"average": 0, "median": 0, "maximum": 0, "count": 0}
@@ -272,7 +280,10 @@ async def scheduling_risk_analytics(db, clinic_id: str = "", start: str = "", en
         item["patient_name"] = patient.get("name", "Unknown") if patient else "Unknown"
         item["doctor_name"] = doctor.get("name", "Unknown") if doctor else "Unknown"
         item["clinic_name"] = clinic.get("name", "Unknown") if clinic else "Unknown"
-        item["appointment_date"] = appointment.get("appointment_day") if appointment else None
+        appointment_date = appointment.get("appointment_day") if appointment else None
+        if isinstance(appointment_date, datetime):
+            appointment_date = appointment_date.isoformat()
+        item["appointment_date"] = appointment_date
         high_risk_items.append(item)
 
     return {"distribution": distribution, "high_risk_appointments": high_risk_items}

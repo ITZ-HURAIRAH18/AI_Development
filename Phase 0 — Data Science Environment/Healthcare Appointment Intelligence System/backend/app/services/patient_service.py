@@ -77,10 +77,14 @@ async def _patient_stats(db, patient_object_id: str) -> dict:
         {"patient_id": patient_object_id}, sort=[("appointment_day", -1)]
     )
 
+    last_appointment = last.get("appointment_day") if last else None
+    if isinstance(last_appointment, datetime):
+        last_appointment = last_appointment.isoformat()
+
     return {
         "appointments": count,
         "no_show_rate": no_show_rate,
-        "last_appointment": last.get("appointment_day") if last else None,
+        "last_appointment": last_appointment,
         "risk_status": _risk_from_rate(no_show_rate),
     }
 

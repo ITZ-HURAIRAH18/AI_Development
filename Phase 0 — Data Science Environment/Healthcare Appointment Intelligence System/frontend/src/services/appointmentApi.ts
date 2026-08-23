@@ -17,8 +17,11 @@ export interface AppointmentFilters {
 
 export const appointmentApi = {
   async list(filters: AppointmentFilters = {}) {
+    const params = Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value !== '' && value !== null && value !== undefined),
+    )
     const { data } = await api.get<{ data: Paginated<Appointment> }>('/api/appointments', {
-      params: filters,
+      params,
     })
     return data.data
   },

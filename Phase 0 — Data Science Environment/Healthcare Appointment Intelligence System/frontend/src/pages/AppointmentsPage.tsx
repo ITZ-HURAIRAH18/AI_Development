@@ -23,6 +23,8 @@ const STATUS_TONES: Record<string, 'neutral' | 'success' | 'warning' | 'danger' 
   Cancelled: 'neutral',
 }
 
+const RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH'] as const
+
 export function AppointmentsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [items, setItems] = useState<Appointment[]>([])
@@ -40,7 +42,8 @@ export function AppointmentsPage() {
   const page = Number(searchParams.get('page') ?? '1')
   const clinicId = searchParams.get('clinic') ?? ''
   const doctorId = searchParams.get('doctor') ?? ''
-  const risk = searchParams.get('risk') ?? ''
+  const rawRisk = searchParams.get('risk') ?? ''
+  const risk = RISK_LEVELS.includes(rawRisk as (typeof RISK_LEVELS)[number]) ? rawRisk : ''
   const status = searchParams.get('status') ?? ''
   const sortBy = searchParams.get('sort_by') ?? 'appointment_day'
   const sortOrder = searchParams.get('sort_order') ?? 'desc'
@@ -60,6 +63,14 @@ export function AppointmentsPage() {
     clinicApi.list().then(setClinics).catch(() => setClinics([]))
     doctorApi.list().then(setDoctors).catch(() => setDoctors([]))
   }, [])
+
+  useEffect(() => {
+    if (!rawRisk) return
+    if (risk) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('risk')
+    setSearchParams(next, { replace: true })
+  }, [rawRisk, risk, searchParams, setSearchParams])
 
   useEffect(() => {
     let active = true
