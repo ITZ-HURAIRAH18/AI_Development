@@ -63,7 +63,9 @@ async def get_clinic_detail(db, clinic_object_id: str) -> Optional[dict]:
             ],
         )
         for row in bucket:
-            risk_distribution[row.get("_id", "")] = row.get("count", 0)
+            key = row.get("id", "")
+            if key in risk_distribution:
+                risk_distribution[key] = row.get("count", 0)
 
     detail = {
         "id": str(doc["_id"]),

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta
 from typing import Any, List, Optional
 
 from app.models.serializers import aggregate_to_list
@@ -7,6 +8,26 @@ logger = logging.getLogger("healthcare-intelligence")
 
 # Reference: clinic_utilization.py
 # utilization_percentage = average_doctor_load * 100 (capped at 100)
+
+
+def _build_match(
+    clinic_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> dict:
+    """Build a match filter. Date strings are parsed to datetime because
+    appointment_day is stored as a BSON date - string comparisons never match."""
+    match: dict = {}
+    if clinic_id:
+        match["clinic_id"] = clinic_id
+    if start_date or end_date:
+        match["appointment_day"] = {}
+        if start_date:
+            match["appointment_day"]["$gte"] = datetime.fromisoformat(start_date)
+        if end_date:
+            end_dt = datetime.fromisoformat(end_date)
+            match["appointment_day"]["$lte"] = end_dt + timedelta(days=1) - timedelta(microseconds=1)
+    return match
 
 
 async def compute_clinic_utilization(
@@ -18,15 +39,7 @@ async def compute_clinic_utilization(
     """Compute utilization statistics per clinic from the appointments collection."""
     appointments = db["appointments"]
 
-    match: dict = {}
-    if clinic_id:
-        match["clinic_id"] = clinic_id
-    if start_date or end_date:
-        match["appointment_day"] = {}
-        if start_date:
-            match["appointment_day"]["$gte"] = start_date
-        if end_date:
-            match["appointment_day"]["$lte"] = end_date
+    match = _build_match(clinic_id, start_date, end_date)
 
     pipeline = [
         {"$match": match},
@@ -82,15 +95,7 @@ async def compute_doctor_workload(
     """Aggregate workload statistics per doctor."""
     appointments = db["appointments"]
 
-    match: dict = {}
-    if clinic_id:
-        match["clinic_id"] = clinic_id
-    if start_date or end_date:
-        match["appointment_day"] = {}
-        if start_date:
-            match["appointment_day"]["$gte"] = start_date
-        if end_date:
-            match["appointment_day"]["$lte"] = end_date
+    match = _build_match(clinic_id, start_date, end_date)
 
     pipeline = [
         {"$match": match},

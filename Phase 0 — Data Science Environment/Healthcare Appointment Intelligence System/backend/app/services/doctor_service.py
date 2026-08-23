@@ -85,7 +85,8 @@ async def get_doctor_detail(db, doctor_object_id: str) -> Optional[dict]:
     ]})
 
     # Trends: patient volume, waiting time, load over time (by day)
-    trends = await aggregate_to_list(
+    # Raw accumulators only - $round is not valid inside a $group stage.
+    trend_rows = await aggregate_to_list(
         db["appointments"],
         [
             {"$match": {"doctor_id": doctor_id}},
@@ -95,14 +96,40 @@ async def get_doctor_detail(db, doctor_object_id: str) -> Optional[dict]:
                         "day": {"$dateToString": {"format": "%Y-%m-%d", "date": "$appointment_day"}}
                     },
                     "appointments": {"$sum": 1},
-                    "average_waiting_time": {"$round": [{"$avg": "$waiting_time"}, 1]},
-                    "average_doctor_load": {"$round": [{"$avg": "$doctor_load"}, 2]},
+                    "average_waiting_time_raw": {"$avg": "$waiting_time"},
+                    "average_doctor_load_raw": {"$avg": "$doctor_load"},
                     "no_shows": {"$sum": {"$cond": [{"$eq": ["$status", "No-show"]}, 1, 0]}},
                 }
             },
             {"$sort": {"_id.day": 1}},
         ],
     )
+    trends = []
+    for row in trend_rows:
+        # serialize_doc renames "_id" -> "id" and stringifies nested values,
+        # so rebuild the { _id: { day } } shape expected by the frontend.
+        key = row.get("id")
+        if isinstance(key, dict):
+            day = key.get("day")
+        else:
+            day = str(key)
+        try:
+            avg_wait = round(float(row.get("average_waiting_time_raw")), 1)
+        except (TypeError, ValueError):
+            avg_wait = 0
+        try:
+            avg_load = round(float(row.get("average_doctor_load_raw")), 2)
+        except (TypeError, ValueError):
+            avg_load = 0.0
+        trends.append(
+            {
+                "_id": {"day": day},
+                "appointments": row.get("appointments", 0),
+                "average_waiting_time": avg_wait,
+                "average_doctor_load": avg_load,
+                "no_shows": row.get("no_shows", 0),
+            }
+        )
     detail["trends"] = trends
 
     return detail

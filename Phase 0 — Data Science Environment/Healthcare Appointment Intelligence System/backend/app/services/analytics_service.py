@@ -119,22 +119,27 @@ async def dashboard_charts(db, clinic_id: str = "", start: str = "", end: str = 
         ],
     )
     no_show_rate = [
-        {"_id": r.get("_id"), "value": _rounded(r.get("no_shows") / r.get("total") * 100 if r.get("total") else 0)}
+        {"_id": r.get("id"), "value": _rounded(r.get("no_shows") / r.get("total") * 100 if r.get("total") else 0)}
         for r in no_show_rows
     ]
 
     waiting_rows = await _time_series(appointments, match, "waiting_time", {"$avg": "$waiting_time"})
-    waiting_trend = [{"_id": r.get("_id"), "value": _rounded(r.get("value"))} for r in waiting_rows]
+    waiting_trend = [{"_id": r.get("id"), "value": _rounded(r.get("value"))} for r in waiting_rows]
     clinic_utilization = await compute_clinic_utilization(db, clinic_id=clinic_id or None, start_date=start or None, end_date=end or None)
     doctor_workload = await compute_doctor_workload(db, clinic_id=clinic_id or None, start_date=start or None, end_date=end or None)
 
-    risk_distribution = await aggregate_to_list(
+    risk_rows = await aggregate_to_list(
         db["predictions"],
         [{"$group": {"_id": "$scheduling_risk", "count": {"$sum": 1}}}],
     )
+    # serialize_doc renames the Mongo "_id" key to "id" - reshape for the API.
+    risk_distribution = [
+        {"_id": r.get("id"), "count": r.get("count", 0)}
+        for r in risk_rows
+    ]
 
     def rename(rows, value_key: str) -> list[dict]:
-        return [{"date": r.get("_id"), value_key: r.get("value")} for r in rows]
+        return [{"date": r.get("id"), value_key: r.get("value")} for r in rows]
 
     return {
         "appointment_volume": rename(volume, "appointments"),
@@ -169,7 +174,7 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
 
     # Distribution via bucket (skip documents without a numeric waiting_time,
     # because $bucket fails on null values)
-    distribution = await aggregate_to_list(
+    distribution_rows = await aggregate_to_list(
         appointments,
         [
             {"$match": {**match, "waiting_time": {"$type": "number"}}},
@@ -182,6 +187,12 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
             },
         ],
     )
+
+    distribution_rows.sort(key=lambda r: str(r.get("id")))
+    distribution = [
+        {"_id": str(r.get("id")), "count": r.get("count", 0)}
+        for r in distribution_rows
+    ]
 
     by_clinic = await aggregate_to_list(
         appointments,
@@ -201,16 +212,16 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
     by_doctor.sort(key=lambda r: r.get("average") or 0, reverse=True)
 
     trend_rows = await _time_series(appointments, match, "waiting_time", {"$avg": "$waiting_time"})
-    trend = [{"date": r.get("_id"), "waiting_time": _rounded(r.get("value"))} for r in trend_rows]
+    trend = [{"date": r.get("id"), "waiting_time": _rounded(r.get("value"))} for r in trend_rows]
 
     return {
         "stats": stats,
         "distribution": distribution,
         "by_clinic": [
-            {"clinic_id": r.get("_id"), "average": _rounded(r.get("average"))} for r in by_clinic
+            {"clinic_id": r.get("id"), "average": _rounded(r.get("average"))} for r in by_clinic
         ],
         "by_doctor": [
-            {"doctor_id": r.get("_id"), "average": _rounded(r.get("average"), 2)} for r in by_doctor
+            {"doctor_id": r.get("id"), "average": _rounded(r.get("average"), 2)} for r in by_doctor
         ],
         "trend": trend,
     }
@@ -225,13 +236,17 @@ async def scheduling_risk_analytics(db, clinic_id: str = "", start: str = "", en
     if appointment_ids is not None:
         query["appointment_id"] = {"$in": appointment_ids}
 
-    distribution = await aggregate_to_list(
+    distribution_rows = await aggregate_to_list(
         db["predictions"],
         [
             {"$match": query},
             {"$group": {"_id": "$scheduling_risk", "count": {"$sum": 1}}},
         ],
     )
+    distribution = [
+        {"_id": r.get("id"), "count": r.get("count", 0)}
+        for r in distribution_rows
+    ]
 
     high_risk = (
         await db["predictions"].find({**query, "scheduling_risk": "HIGH"})
@@ -291,7 +306,7 @@ async def advanced_analytics(db, clinic_id: str = "", start: str = "", end: str 
     )
     sms_impact = [
         {
-            "sms_received": r.get("_id"),
+            "sms_received": r.get("id"),
             "appointments": r.get("appointments"),
             "no_show_rate": round(r.get("no_shows") / r.get("appointments") * 100, 1) if r.get("appointments") else 0,
         }
@@ -323,7 +338,7 @@ async def advanced_analytics(db, clinic_id: str = "", start: str = "", end: str 
     )
     age_groups = [
         {
-            "age_group": r.get("_id"),
+            "age_group": r.get("id"),
             "appointments": r.get("appointments"),
             "no_show_rate": round(r.get("no_shows") / r.get("appointments") * 100, 1) if r.get("appointments") else 0,
         }
@@ -347,7 +362,7 @@ async def advanced_analytics(db, clinic_id: str = "", start: str = "", end: str 
     )
     neighbourhoods = [
         {
-            "neighbourhood": r.get("_id") or "Unknown",
+            "neighbourhood": r.get("id") or "Unknown",
             "appointments": r.get("appointments"),
             "no_show_rate": round(r.get("no_shows") / r.get("appointments") * 100, 1) if r.get("appointments") else 0,
         }
