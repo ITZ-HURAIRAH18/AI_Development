@@ -19,8 +19,12 @@ function tooltipStyles() {
   }
 }
 
+import { useOutletContext } from 'react-router-dom'
+
 export function WaitingTimePage() {
-  const { data, loading, error, reload } = useApi(() => analyticsApi.waitingTime({}), [], 'waiting-time')
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const clinicId = outlet?.clinicId ?? ''
+  const { data, loading, error, reload } = useApi(() => analyticsApi.waitingTime({ clinic_id: clinicId }), [clinicId], `waiting-time-${clinicId}`)
 
   if (loading) {
     return (

@@ -40,9 +40,13 @@ function chartTooltipStyles() {
   }
 }
 
+import { useOutletContext } from 'react-router-dom'
+
 export function DashboardPage() {
-  const kpis = useApi(() => analyticsApi.dashboard(), [], 'dashboard-kpis')
-  const charts = useApi(() => analyticsApi.charts(), [], 'dashboard-charts')
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const clinicId = outlet?.clinicId ?? ''
+  const kpis = useApi(() => analyticsApi.dashboard({ clinic_id: clinicId }), [clinicId], `dashboard-kpis-${clinicId}`)
+  const charts = useApi(() => analyticsApi.charts({ clinic_id: clinicId }), [clinicId], `dashboard-charts-${clinicId}`)
 
   if (charts.loading) {
     return (

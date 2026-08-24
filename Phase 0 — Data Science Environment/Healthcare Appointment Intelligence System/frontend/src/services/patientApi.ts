@@ -2,7 +2,7 @@ import { api } from './api'
 import type { Paginated, Patient } from '@/types'
 
 export const patientApi = {
-  async list(params: { search?: string; page?: number; limit?: number; sort_by?: string; sort_order?: string } = {}) {
+  async list(params: { search?: string; clinic_id?: string; page?: number; limit?: number; sort_by?: string; sort_order?: string } = {}) {
     const { data } = await api.get<{ data: Paginated<Patient> }>('/api/patients', { params })
     return data.data
   },

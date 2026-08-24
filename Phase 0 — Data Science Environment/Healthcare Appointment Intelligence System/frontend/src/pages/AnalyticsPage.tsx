@@ -22,10 +22,15 @@ function tooltipStyles() {
   }
 }
 
+import { useOutletContext } from 'react-router-dom'
+
 export function AnalyticsPage() {
-  const [clinicId, setClinicId] = useState('')
-  const charts = useApi(() => analyticsApi.charts({ clinic_id: clinicId }), [clinicId], `analytics-charts-${clinicId}`)
-  const advanced = useApi(() => analyticsApi.advanced({ clinic_id: clinicId }), [clinicId], `analytics-advanced-${clinicId}`)
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const globalClinicId = outlet?.clinicId ?? ''
+  const [localClinicId, setLocalClinicId] = useState('')
+  const activeClinicId = localClinicId || globalClinicId
+  const charts = useApi(() => analyticsApi.charts({ clinic_id: activeClinicId }), [activeClinicId], `analytics-charts-${activeClinicId}`)
+  const advanced = useApi(() => analyticsApi.advanced({ clinic_id: activeClinicId }), [activeClinicId], `analytics-advanced-${activeClinicId}`)
   const clinics = useApi(() => clinicApi.list(), [], 'analytics-clinics')
 
   if (charts.loading || advanced.loading) {
@@ -60,8 +65,8 @@ export function AnalyticsPage() {
           <div className="min-w-44">
             <Select
               label="Clinic Scope"
-              value={clinicId}
-              onChange={(event) => setClinicId(event.target.value)}
+              value={activeClinicId}
+              onChange={(event) => setLocalClinicId(event.target.value)}
               options={[
                 { value: '', label: 'All Clinics Overview' },
                 ...(clinics.data ?? []).map((c) => ({ value: c.clinic_id, label: `${c.clinic_id} — ${c.name}` })),

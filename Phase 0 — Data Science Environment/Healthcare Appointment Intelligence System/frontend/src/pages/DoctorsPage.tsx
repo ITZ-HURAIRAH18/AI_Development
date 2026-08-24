@@ -12,11 +12,16 @@ import { useState } from 'react'
 import { formatMinutes, formatPercent } from '@/utils/format'
 import type { Doctor } from '@/types'
 
+import { useOutletContext } from 'react-router-dom'
+
 export function DoctorsPage() {
   const navigate = useNavigate()
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const globalClinicId = outlet?.clinicId ?? ''
   const [search, setSearch] = useState('')
-  const [clinicId, setClinicId] = useState('')
-  const { data, loading, error, reload } = useApi(() => doctorApi.list({ search, clinic_id: clinicId }), [search, clinicId])
+  const [localClinicId, setLocalClinicId] = useState('')
+  const activeClinicId = localClinicId || globalClinicId
+  const { data, loading, error, reload } = useApi(() => doctorApi.list({ search, clinic_id: activeClinicId }), [search, activeClinicId])
   const clinics = useApi(() => clinicApi.list(), [])
 
   if (loading) {
@@ -38,8 +43,8 @@ export function DoctorsPage() {
         filters={[
           {
             label: 'Clinic Filter',
-            value: clinicId,
-            onChange: setClinicId,
+            value: activeClinicId,
+            onChange: setLocalClinicId,
             options: [
               { value: '', label: 'All Clinics Overview' },
               ...(clinics.data ?? []).map((c) => ({ value: c.clinic_id, label: `${c.clinic_id} — ${c.name}` })),
@@ -49,7 +54,7 @@ export function DoctorsPage() {
         clearable
         onClear={() => {
           setSearch('')
-          setClinicId('')
+          setLocalClinicId('')
         }}
       />
 

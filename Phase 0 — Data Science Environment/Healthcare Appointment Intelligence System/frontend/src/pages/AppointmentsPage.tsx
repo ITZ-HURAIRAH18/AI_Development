@@ -26,6 +26,8 @@ const STATUS_TONES: Record<string, 'neutral' | 'success' | 'warning' | 'danger' 
 const RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH'] as const
 
 export function AppointmentsPage() {
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const globalClinicId = outlet?.clinicId ?? ''
   const [searchParams, setSearchParams] = useSearchParams()
   const [items, setItems] = useState<Appointment[]>([])
   const [total, setTotal] = useState(0)
@@ -40,7 +42,7 @@ export function AppointmentsPage() {
   const debouncedSearch = useDebounce(search, 300)
 
   const page = Number(searchParams.get('page') ?? '1')
-  const clinicId = searchParams.get('clinic') ?? ''
+  const clinicId = searchParams.get('clinic') || globalClinicId
   const doctorId = searchParams.get('doctor') ?? ''
   const rawRisk = searchParams.get('risk') ?? ''
   const risk = RISK_LEVELS.includes(rawRisk as (typeof RISK_LEVELS)[number]) ? rawRisk : ''

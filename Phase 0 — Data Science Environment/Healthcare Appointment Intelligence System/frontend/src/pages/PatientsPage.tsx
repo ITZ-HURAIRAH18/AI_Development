@@ -1,19 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar } from '@/components/ui/FilterBar'
-import { Table } from '@/components/ui/Table'
-import { Badge } from '@/components/ui/Badge'
-import { Pagination } from '@/components/ui/Pagination'
-import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
-import { useDebounce } from '@/hooks/useDebounce'
-import { patientApi } from '@/services/patientApi'
-import { formatDate, formatNumber, formatPercent } from '@/utils/format'
-import { getRiskStyle } from '@/utils/risk'
-import type { Patient } from '@/types'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 
 export function PatientsPage() {
   const navigate = useNavigate()
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const clinicId = outlet?.clinicId ?? ''
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.get('search') ?? ''
   const debouncedSearch = useDebounce(search, 300)
@@ -29,7 +19,7 @@ export function PatientsPage() {
     setLoading(true)
     setError('')
     patientApi
-      .list({ search: debouncedSearch, page, limit: 20 })
+      .list({ search: debouncedSearch, clinic_id: clinicId, page, limit: 20 })
       .then((result) => {
         if (!active) return
         setItems(result.items)
@@ -40,7 +30,7 @@ export function PatientsPage() {
     return () => {
       active = false
     }
-  }, [debouncedSearch, page])
+  }, [debouncedSearch, clinicId, page])
 
   const updateParam = useCallback(
     (key: string, value: string) => {

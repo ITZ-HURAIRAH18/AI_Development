@@ -257,12 +257,12 @@ export function AppLayout() {
                 <ChevronDown className="hidden h-3.5 w-3.5 text-carbon-gray-30 sm:block" aria-hidden="true" />
               </button>
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-none border border-carbon-gray-20 bg-surface py-1 text-carbon-gray-100 shadow-carbon" role="menu">
-                  <div className="px-4 py-2 border-b border-carbon-gray-20">
-                    <p className="text-xs font-semibold text-carbon-gray-100">{user?.name ?? 'User'}</p>
-                    <p className="text-[10px] text-carbon-gray-60">{user?.email ?? ''}</p>
+                <div className="absolute right-0 mt-2 w-52 rounded-none border border-carbon-gray-80 bg-[#262626] py-1 text-white shadow-carbon z-50" role="menu">
+                  <div className="px-4 py-2 border-b border-carbon-gray-80">
+                    <p className="text-xs font-semibold text-white">{user?.name ?? 'User'}</p>
+                    <p className="text-[10px] text-carbon-gray-30 font-mono">{user?.email ?? ''}</p>
                   </div>
-                  <Link to="/settings" onClick={closeMenus} className="block px-4 py-2 text-xs text-carbon-gray-70 hover:bg-carbon-gray-10 hover:text-carbon-gray-100" role="menuitem">
+                  <Link to="/settings" onClick={closeMenus} className="block px-4 py-2 text-xs text-carbon-gray-30 hover:bg-[#393939] hover:text-white" role="menuitem">
                     System Settings
                   </Link>
                   <button
@@ -270,7 +270,7 @@ export function AppLayout() {
                       closeMenus()
                       logout()
                     }}
-                    className="flex w-full items-center gap-2 border-t border-carbon-gray-20 px-4 py-2 text-left text-xs font-medium text-danger hover:bg-red-50"
+                    className="flex w-full items-center gap-2 border-t border-carbon-gray-80 px-4 py-2 text-left text-xs font-medium text-red-400 hover:bg-red-950/50 hover:text-red-300"
                     role="menuitem"
                   >
                     <LogOut className="h-3.5 w-3.5" aria-hidden="true" />

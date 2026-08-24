@@ -40,8 +40,12 @@ interface RiskDoc {
   appointment_date?: string
 }
 
+import { useOutletContext } from 'react-router-dom'
+
 export function SchedulingRiskPage() {
-  const { data, loading, error, reload } = useApi(() => analyticsApi.schedulingRisk({}), [], 'scheduling-risk')
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const clinicId = outlet?.clinicId ?? ''
+  const { data, loading, error, reload } = useApi(() => analyticsApi.schedulingRisk({ clinic_id: clinicId }), [clinicId], `scheduling-risk-${clinicId}`)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFactor, setSelectedFactor] = useState<string>('ALL')
 

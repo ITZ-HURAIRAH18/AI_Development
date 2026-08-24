@@ -16,8 +16,12 @@ function utilizationTone(value: number) {
   return 'success'
 }
 
+import { useOutletContext } from 'react-router-dom'
+
 export function ClinicUtilizationPage() {
-  const { data, loading, error, reload } = useApi(() => clinicApi.utilization({}), [], 'clinic-utilization')
+  const outlet = useOutletContext<{ clinicId?: string }>()
+  const clinicId = outlet?.clinicId ?? ''
+  const { data, loading, error, reload } = useApi(() => clinicApi.utilization({ clinic_id: clinicId }), [clinicId], `clinic-utilization-${clinicId}`)
 
   if (loading) {
     return (
