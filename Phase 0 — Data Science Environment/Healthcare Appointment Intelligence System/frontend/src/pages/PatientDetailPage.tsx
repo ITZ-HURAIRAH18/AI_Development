@@ -31,16 +31,16 @@ export function PatientDetailPage() {
   }
 
   if (error || !data) {
-    return <ErrorState message={error ?? 'Patient not found'} onRetry={reload} />
+    return <ErrorState message={error ?? 'Patient profile not found'} onRetry={reload} />
   }
 
   const riskStyle = getRiskStyle(data.risk_status ?? 'LOW')
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       <PageHeader
-        title={data.name}
-        description={`${data.patient_id} · ${data.gender}`}
+        title={`PATIENT PROFILE: ${data.name.toUpperCase()}`}
+        description={`Identifier: ${data.patient_id} · Gender: ${data.gender}`}
         actions={
           <Badge tone={riskStyle.dot === 'bg-danger' ? 'danger' : riskStyle.dot === 'bg-warning' ? 'warning' : 'success'}>
             {riskStyle.label}
@@ -49,17 +49,19 @@ export function PatientDetailPage() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard title="Age" value={String(data.age)} />
-        <SummaryCard title="Appointments" value={formatNumber(data.appointments)} />
-        <SummaryCard title="No-show rate" value={formatPercent(data.no_show_rate)} />
-        <SummaryCard title="Last appointment" value={formatDate(data.last_appointment)} />
+        <SummaryCard title="AGE" value={String(data.age)} />
+        <SummaryCard title="TOTAL APPOINTMENTS" value={formatNumber(data.appointments)} />
+        <SummaryCard title="NO-SHOW RATE" value={formatPercent(data.no_show_rate)} />
+        <SummaryCard title="LAST APPOINTMENT" value={formatDate(data.last_appointment)} />
       </div>
 
       <Card>
-        <CardHeader title="Appointment History" subtitle="Recent appointments for this patient" />
-        <CardContent>
+        <CardHeader title="HISTORICAL APPOINTMENT TIMELINE" subtitle="Chronological history of patient clinic visits" />
+        <CardContent className="p-0">
           {(data.history && data.history.length) === 0 ? (
-            <EmptyState title="No appointments" description="This patient has no recorded appointments." />
+            <div className="p-4">
+              <EmptyState title="No recorded appointments" description="This patient profile currently has no appointment history." />
+            </div>
           ) : (
             <Table
               columns={[
@@ -72,13 +74,13 @@ export function PatientDetailPage() {
               ]}
             >
               {(data.history ?? []).map((item: Appointment) => (
-                <tr key={item.id}>
-                  <td className="px-4 py-3 font-medium text-primary-700">{item.appointment_id}</td>
-                  <td className="px-4 py-3 text-charcoal">{formatDate(item.appointment_day)}</td>
-                  <td className="px-4 py-3"><Badge tone="neutral">{item.clinic_id}</Badge></td>
-                  <td className="px-4 py-3 text-charcoal">{item.doctor_id}</td>
-                  <td className="px-4 py-3 text-right text-charcoal">{formatNumber(item.waiting_time)} min</td>
-                  <td className="px-4 py-3"><Badge tone={STATUS_TONES[item.status] ?? 'neutral'}>{item.status}</Badge></td>
+                <tr key={item.id} className="cds-table-row">
+                  <td className="px-3.5 py-2.5 font-mono font-semibold text-primary-500">{item.appointment_id}</td>
+                  <td className="px-3.5 py-2.5 text-carbon-gray-70 font-mono">{formatDate(item.appointment_day)}</td>
+                  <td className="px-3.5 py-2.5"><Badge tone="neutral">{item.clinic_id}</Badge></td>
+                  <td className="px-3.5 py-2.5 text-carbon-gray-100">{item.doctor_id}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{formatNumber(item.waiting_time)} min</td>
+                  <td className="px-3.5 py-2.5"><Badge tone={STATUS_TONES[item.status] ?? 'neutral'}>{item.status}</Badge></td>
                 </tr>
               ))}
             </Table>
@@ -91,15 +93,15 @@ export function PatientDetailPage() {
 
 function SummaryCard({ title, value }: { title: string; value: string }) {
   return (
-    <Card>
-      <CardContent>
+    <Card className="border-t-2 border-t-primary-500">
+      <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-50 text-primary-700">
-            <UserRound className="h-5 w-5" aria-hidden="true" />
+          <div className="flex h-8 w-8 items-center justify-center bg-carbon-gray-10 text-carbon-gray-100">
+            <UserRound className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-xs text-charcoal-muted">{title}</p>
-            <p className="text-lg font-semibold text-charcoal">{value}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">{title}</p>
+            <p className="text-xl font-bold tracking-tight font-mono text-carbon-gray-100">{value}</p>
           </div>
         </div>
       </CardContent>

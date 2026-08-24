@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ArrowUpDown } from 'lucide-react'
 
 interface TableProps {
   columns: { key: string; label: string; className?: string; align?: 'left' | 'right' | 'center' }[]
@@ -10,25 +11,28 @@ interface TableProps {
 
 export function Table({ columns, children, onSort, sortBy, sortOrder }: TableProps) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto border border-carbon-gray-20 bg-surface">
+      <table className="w-full text-left text-xs font-sans">
         <thead>
-          <tr className="border-b border-border bg-gray-50/60">
+          <tr className="border-b border-carbon-gray-20 bg-carbon-gray-10 text-carbon-gray-70">
             {columns.map((column) => {
               const isSorted = sortBy === column.key
               return (
                 <th
                   key={column.key}
                   scope="col"
-                  className={`px-4 py-3 text-xs font-medium uppercase tracking-wide text-charcoal-muted ${column.align === 'right' ? 'text-right' : ''} ${column.align === 'center' ? 'text-center' : ''} ${column.className ?? ''}`}
+                  className={`px-3.5 py-3 font-semibold uppercase tracking-wider text-[11px] ${
+                    column.align === 'right' ? 'text-right' : ''
+                  } ${column.align === 'center' ? 'text-center' : ''} ${column.className ?? ''}`}
                 >
                   {onSort ? (
                     <button
                       onClick={() => onSort(column.key)}
-                      className="inline-flex items-center gap-1 hover:text-charcoal focus:outline-none"
+                      className="inline-flex items-center gap-1.5 hover:text-carbon-gray-100 focus:outline-none"
                     >
-                      {column.label}
-                      {isSorted && <span aria-hidden="true">{sortOrder === 'asc' ? '▲' : '▼'}</span>}
+                      <span>{column.label}</span>
+                      <ArrowUpDown className={`h-3 w-3 ${isSorted ? 'text-primary-500' : 'text-carbon-gray-50'}`} />
+                      {isSorted && <span className="sr-only">Sorted {sortOrder}</span>}
                     </button>
                   ) : (
                     column.label
@@ -38,7 +42,7 @@ export function Table({ columns, children, onSort, sortBy, sortOrder }: TablePro
             })}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">{children}</tbody>
+        <tbody className="divide-y divide-carbon-gray-20 text-carbon-gray-100">{children}</tbody>
       </table>
     </div>
   )

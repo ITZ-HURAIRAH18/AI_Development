@@ -14,51 +14,51 @@ export function ClinicsPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Clinics" description="Operational overview of each clinic." />
+        <PageHeader title="Clinics Directory & Capacity" description="Operational overview, active doctors, and average waiting time per facility." />
         <LoadingState rows={8} />
       </div>
     )
   }
   if (error || !data) {
-    return <ErrorState message={error ?? 'Unable to load clinics'} onRetry={reload} />
+    return <ErrorState message={error ?? 'Unable to load clinics directory'} onRetry={reload} />
   }
 
   return (
-    <div>
-      <PageHeader title="Clinics" description="Operational overview of each clinic." />
+    <div className="font-sans space-y-4">
+      <PageHeader title="Clinics Directory & Capacity" description="Operational overview, active doctors, and average waiting time per facility." />
       {data.length === 0 ? (
-        <EmptyState title="No clinics" description="Import clinic data to see clinic statistics." />
+        <EmptyState title="No clinics directory records" description="Import clinic configuration records to populate capacity analytics." />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {data.map((clinic) => (
-            <Card key={clinic.id} className="cursor-pointer p-5 transition-shadow hover:shadow-md" onClick={() => navigate(`/clinics/${clinic.id}`)}>
+            <Card key={clinic.id} className="cursor-pointer p-4 transition-all hover:border-carbon-gray-50 border-t-4 border-t-primary-500 shadow-card" onClick={() => navigate(`/clinics/${clinic.id}`)}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-50 text-primary-700">
+                  <div className="flex h-9 w-9 items-center justify-center bg-carbon-gray-10 text-primary-500">
                     <Building2 className="h-5 w-5" aria-hidden="true" />
                   </div>
                   <div>
-                    <p className="font-semibold text-charcoal">{clinic.name}</p>
-                    <p className="text-xs text-charcoal-muted">{clinic.clinic_id} · {clinic.location}</p>
+                    <p className="font-bold text-sm tracking-tight text-carbon-gray-100">{clinic.name}</p>
+                    <p className="text-[11px] font-mono text-carbon-gray-60">{clinic.clinic_id} · {clinic.location}</p>
                   </div>
                 </div>
               </div>
-              <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-carbon-gray-20 pt-3 text-xs">
                 <div>
-                  <dt className="text-xs text-charcoal-muted">Doctors</dt>
-                  <dd className="font-medium text-charcoal">{typeof clinic.doctors === 'number' ? clinic.doctors : (clinic.doctors ?? []).length}</dd>
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">Active Doctors</dt>
+                  <dd className="mt-0.5 font-mono text-sm font-semibold text-carbon-gray-100">{typeof clinic.doctors === 'number' ? clinic.doctors : (clinic.doctors ?? []).length}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-charcoal-muted">Appointments</dt>
-                  <dd className="font-medium text-charcoal">{clinic.appointments ?? 0}</dd>
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">Appointments</dt>
+                  <dd className="mt-0.5 font-mono text-sm font-semibold text-carbon-gray-100">{clinic.appointments ?? 0}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-charcoal-muted">Utilization</dt>
-                  <dd className="font-medium text-charcoal">{formatPercent(clinic.utilization)}</dd>
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">Capacity Utilization</dt>
+                  <dd className="mt-0.5 font-mono text-sm font-bold text-primary-500">{formatPercent(clinic.utilization)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-charcoal-muted">Avg waiting</dt>
-                  <dd className="font-medium text-charcoal">{formatMinutes(clinic.average_waiting_time)}</dd>
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">Avg Waiting Time</dt>
+                  <dd className="mt-0.5 font-mono text-sm font-semibold text-carbon-gray-100">{formatMinutes(clinic.average_waiting_time)}</dd>
                 </div>
               </dl>
             </Card>

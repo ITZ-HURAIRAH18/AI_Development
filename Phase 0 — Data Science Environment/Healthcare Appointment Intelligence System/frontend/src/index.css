@@ -3,25 +3,78 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --cds-background: #F4F4F4;
+    --cds-layer-01: #FFFFFF;
+    --cds-text-01: #161616;
+    --cds-text-02: #525252;
+    --cds-text-03: #6F6F6F;
+    --cds-border-subtle: #E0E0E0;
+    --cds-border-strong: #8D8D8D;
+    --cds-interactive-01: #0F62FE;
+    --cds-hover-primary: #0353E9;
+    --cds-active-primary: #002D9C;
+    --cds-support-01: #DA1E28;
+    --cds-support-02: #198038;
+    --cds-support-03: #F1C21B;
+    --cds-support-04: #4589FF;
+  }
+
   html {
     @apply antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   body {
-    @apply bg-background text-charcoal;
+    background-color: var(--cds-background);
+    color: var(--cds-text-01);
+    font-family: 'IBM Plex Sans', Inter, system-ui, -apple-system, sans-serif;
   }
   ::selection {
-    @apply bg-primary-100 text-primary-800;
+    background-color: #D0E2FF;
+    color: #002D9C;
   }
 }
 
-/* Subtle skeleton shimmer */
+/* Carbon Table Utilities */
+.cds-table-header {
+  background-color: #F4F4F4;
+  border-bottom: 1px solid #E0E0E0;
+  color: #525252;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cds-table-row {
+  border-bottom: 1px solid #E0E0E0;
+  transition: background-color 150ms ease;
+}
+.cds-table-row:hover {
+  background-color: #F4F4F4;
+}
+
+/* Carbon Panel Card */
+.cds-tile {
+  background-color: #FFFFFF;
+  border: 1px solid #E0E0E0;
+  border-top: 3px solid #0F62FE;
+}
+
+/* Header dark dropdown contrast */
+header select option {
+  background-color: #262626 !important;
+  color: #FFFFFF !important;
+}
+
+/* Skeleton shimmer */
 .skeleton {
-  @apply relative overflow-hidden bg-gray-200/70;
+  @apply relative overflow-hidden bg-gray-200/80;
 }
 .skeleton::after {
   content: '';
   @apply absolute inset-0 -translate-x-full;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
   animation: shimmer 1.4s infinite;
 }
 @keyframes shimmer {

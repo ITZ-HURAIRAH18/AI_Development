@@ -11,7 +11,15 @@ import { RISK_COLORS } from '@/utils/risk'
 import type { RiskLevel } from '@/utils/risk'
 
 function tooltipStyles() {
-  return { contentStyle: { borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12, background: '#FFFFFF' } }
+  return {
+    contentStyle: {
+      borderRadius: 0,
+      border: '1px solid #E0E0E0',
+      fontSize: 11,
+      fontFamily: 'IBM Plex Sans, sans-serif',
+      background: '#FFFFFF',
+    },
+  }
 }
 
 export function AnalyticsPage() {
@@ -39,24 +47,24 @@ export function AnalyticsPage() {
   const chartData = charts.data
 
   const riskDistribution = (chartData?.scheduling_risk_distribution ?? []).map((item) => ({
-    name: `${item._id} risk`,
+    name: `${item._id} Risk`,
     value: item.count,
   }))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       <PageHeader
-        title="Analytics"
-        description="Advanced appointment, no-show and operational analytics."
+        title="Advanced Operations & Demographic Analytics"
+        description="SMS intervention analysis, age group cohorts, neighbourhood demand density, and risk distribution diagnostics."
         actions={
           <div className="min-w-44">
             <Select
-              label="Clinic"
+              label="Clinic Scope"
               value={clinicId}
               onChange={(event) => setClinicId(event.target.value)}
               options={[
-                { value: '', label: 'All clinics' },
-                ...(clinics.data ?? []).map((c) => ({ value: c.clinic_id, label: c.name })),
+                { value: '', label: 'All Clinics Overview' },
+                ...(clinics.data ?? []).map((c) => ({ value: c.clinic_id, label: `${c.clinic_id} — ${c.name}` })),
               ]}
             />
           </div>
@@ -64,73 +72,73 @@ export function AnalyticsPage() {
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ChartCard title="Appointment Volume" subtitle="Appointments per day">
+        <ChartCard title="APPOINTMENT THROUGHPUT VOLUME" subtitle="Daily appointment records count">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={chartData?.appointment_volume ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#525252' }} tickFormatter={(v) => v.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...tooltipStyles()} />
-              <Bar dataKey="appointments" name="Appointments" fill="#1F6E66" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="appointments" name="Appointments" fill="#0F62FE" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="No-show Trend" subtitle="No-show rate over time (%)">
+        <ChartCard title="HISTORICAL NO-SHOW RATE TREND" subtitle="Daily no-show percentage (%)">
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={chartData?.no_show_rate ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} unit="%" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#525252' }} tickFormatter={(v) => v.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} unit="%" />
               <Tooltip {...tooltipStyles()} />
-              <Line type="monotone" dataKey="rate" name="No-show %" stroke="#B45309" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="rate" name="No-show Rate (%)" stroke="#DA1E28" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="SMS Impact" subtitle="No-show rate by SMS reminder status">
+        <ChartCard title="SMS REMINDER INTERVENTION IMPACT" subtitle="Comparison of no-show rate between SMS notification states">
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={(advancedData?.sms_impact ?? []).map((row) => ({ name: row.sms_received ? 'SMS received' : 'No SMS', rate: row.no_show_rate }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} unit="%" />
+            <BarChart data={(advancedData?.sms_impact ?? []).map((row) => ({ name: row.sms_received ? 'SMS Sent' : 'No SMS', rate: row.no_show_rate }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} unit="%" />
               <Tooltip {...tooltipStyles()} />
-              <Bar dataKey="rate" name="No-show rate" fill="#64748B" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="rate" name="No-show Rate (%)" fill="#525252" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Age Group Analysis" subtitle="No-show rate by age group">
+        <ChartCard title="DEMOGRAPHIC AGE GROUP COHORT ANALYSIS" subtitle="No-show probability variation across patient age brackets">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={(advancedData?.age_groups ?? []).map((row) => ({ name: row.age_group, rate: row.no_show_rate }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} unit="%" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} unit="%" />
               <Tooltip {...tooltipStyles()} />
-              <Bar dataKey="rate" name="No-show rate" fill="#475569" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="rate" name="No-show Rate (%)" fill="#393939" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Neighbourhood Analysis" subtitle="Top neighbourhoods by appointment volume">
+        <ChartCard title="NEIGHBOURHOOD DEMAND DENSITY" subtitle="Top patient geographical origins by volume">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={(advancedData?.neighbourhoods ?? []).map((row) => ({ name: row.neighbourhood, appointments: row.appointments }))} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={120} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#525252' }} tickLine={false} axisLine={false} width={120} />
               <Tooltip {...tooltipStyles()} />
-              <Bar dataKey="appointments" name="Appointments" fill="#1F6E66" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="appointments" name="Appointments" fill="#0F62FE" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Risk Distribution" subtitle="Scheduling risk across predictions">
+        <ChartCard title="SCHEDULING RISK CLASSIFICATION PROFILE" subtitle="Risk distribution across all active predictions">
           {riskDistribution.length === 0 ? (
-            <EmptyState title="No risk data" description="Run predictions to build this distribution." />
+            <EmptyState title="No risk data logged" description="Execute model inference to build risk profile metrics." />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
-                <Pie data={riskDistribution} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3}>
+                <Pie data={riskDistribution} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3} stroke="#ffffff" strokeWidth={2}>
                   {riskDistribution.map((entry) => (
                     <Cell key={entry.name} fill={RISK_COLORS[(entry.name.split(' ')[0] as RiskLevel) ?? 'LOW']} />
                   ))}

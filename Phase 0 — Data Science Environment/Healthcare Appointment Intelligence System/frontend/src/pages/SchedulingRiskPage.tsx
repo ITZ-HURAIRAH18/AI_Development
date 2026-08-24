@@ -92,190 +92,153 @@ export function SchedulingRiskPage() {
     return <ErrorState message={error ?? 'Unable to load scheduling risk analytics'} onRetry={reload} />
   }
 
-  const pieData = distribution.map((item) => ({
+  const chartData = distribution.map((item) => ({
     name: `${item._id} Risk`,
     value: item.count,
     level: item._id as 'HIGH' | 'MEDIUM' | 'LOW',
   }))
 
   return (
-    <div className="space-y-6">
-      {/* Header with Action */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <PageHeader
-          title="Scheduling Risk Intelligence"
-          description="Real-time ML risk predictions and high-priority appointment flag monitoring."
-        />
-        <button
-          onClick={reload}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2.5 text-sm font-medium text-charcoal shadow-sm transition-all hover:bg-gray-50 hover:text-primary-700 active:scale-95"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh Data
-        </button>
-      </div>
+    <div className="space-y-6 font-sans">
+      <PageHeader
+        title="Scheduling Risk Intelligence"
+        description="High-risk appointment flags, risk factor distribution, and capacity diagnostic tracking."
+        actions={
+          <button
+            onClick={reload}
+            className="inline-flex h-8 items-center gap-1.5 border border-carbon-gray-30 bg-surface px-3 text-xs font-semibold uppercase tracking-wider text-carbon-gray-100 hover:bg-carbon-gray-10 transition-all"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh Analytics
+          </button>
+        }
+      />
 
-      {/* KPI Overview Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="High Risk Appointments"
+          title="HIGH SCHEDULING RISK"
           value={formatNumber(highCount)}
-          subtitle={`${totalAnalyzed ? ((highCount / totalAnalyzed) * 100).toFixed(1) : 0}% of total predictions`}
+          subtitle={`${((highCount / (totalAnalyzed || 1)) * 100).toFixed(1)}% of total predictions`}
           icon={ShieldAlert}
           tone="danger"
         />
         <StatCard
-          title="Medium Risk"
+          title="MEDIUM SCHEDULING RISK"
           value={formatNumber(mediumCount)}
-          subtitle={`${totalAnalyzed ? ((mediumCount / totalAnalyzed) * 100).toFixed(1) : 0}% of total predictions`}
+          subtitle={`${((mediumCount / (totalAnalyzed || 1)) * 100).toFixed(1)}% of total predictions`}
           icon={AlertTriangle}
           tone="warning"
         />
         <StatCard
-          title="Low Risk"
+          title="LOW SCHEDULING RISK"
           value={formatNumber(lowCount)}
-          subtitle={`${totalAnalyzed ? ((lowCount / totalAnalyzed) * 100).toFixed(1) : 0}% of total predictions`}
+          subtitle={`${((lowCount / (totalAnalyzed || 1)) * 100).toFixed(1)}% of total predictions`}
           icon={CheckCircle2}
           tone="success"
         />
         <StatCard
-          title="Total Predictions"
+          title="TOTAL PREDICTIONS ANALYZED"
           value={formatNumber(totalAnalyzed)}
-          subtitle="Analyzed ML models"
+          subtitle="Predictions logged in database"
           icon={Activity}
           tone="neutral"
         />
       </div>
 
-      {/* Main Grid: Distribution Chart & High Risk Table */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Left Column: Donut Breakdown */}
         <div className="lg:col-span-4">
           <ChartCard
-            title="Risk Level Distribution"
-            subtitle={`${formatNumber(totalAnalyzed)} total predictions evaluated`}
+            title="RISK DISTRIBUTION DIAGNOSTIC"
+            subtitle="Overall risk classification breakdown"
           >
-            {pieData.length === 0 ? (
-              <EmptyState title="No risk data available" description="Run predictions to populate the risk breakdown." />
+            {chartData.length === 0 ? (
+              <EmptyState title="No distribution data" description="No risk classifications logged." />
             ) : (
-              <div className="space-y-6">
-                <div className="relative flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={55}
-                        outerRadius={85}
-                        paddingAngle={4}
-                        stroke="#ffffff"
-                        strokeWidth={2}
-                      >
-                        {pieData.map((entry) => (
-                          <Cell
-                            key={entry.name}
-                            fill={RISK_COLORS[entry.level] ?? '#64748B'}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: 8,
-                          border: '1px solid #E2E8F0',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
-                          fontSize: 12,
-                          background: '#FFFFFF',
-                          fontWeight: 500,
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  {/* Center Stat Badge */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-2xl font-bold text-charcoal">{highCount}</span>
-                    <span className="text-xs font-medium text-danger uppercase tracking-wider">High Risk</span>
-                  </div>
+              <div className="relative flex flex-col items-center">
+                <ResponsiveContainer width="100%" height={230}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={65}
+                      outerRadius={95}
+                      paddingAngle={3}
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                    >
+                      {chartData.map((entry: { name: string; value: number; level: 'HIGH' | 'MEDIUM' | 'LOW' }) => (
+                        <Cell key={entry.name} fill={RISK_COLORS[entry.level] ?? '#8D8D8D'} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 0,
+                        border: '1px solid #E0E0E0',
+                        fontSize: '11px',
+                        fontFamily: 'IBM Plex Sans, sans-serif',
+                        background: '#FFFFFF',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center pb-6">
+                  <span className="text-2xl font-bold font-mono tracking-tight text-carbon-gray-100">{highCount}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-danger">HIGH RISK</span>
                 </div>
 
-                {/* Styled Legend & Progress Items */}
-                <div className="space-y-3 pt-2">
-                  {[
-                    { level: 'HIGH', count: highCount, color: RISK_COLORS.HIGH, label: 'High Risk' },
-                    { level: 'MEDIUM', count: mediumCount, color: RISK_COLORS.MEDIUM, label: 'Medium Risk' },
-                    { level: 'LOW', count: lowCount, color: RISK_COLORS.LOW, label: 'Low Risk' },
-                  ].map((item) => {
-                    const pct = totalAnalyzed > 0 ? ((item.count / totalAnalyzed) * 100).toFixed(1) : '0'
-                    return (
-                      <div key={item.level} className="space-y-1.5 rounded-lg border border-border/50 bg-gray-50/50 p-2.5">
-                        <div className="flex items-center justify-between text-xs font-medium">
-                          <span className="flex items-center gap-2 text-charcoal">
-                            <span
-                              className="h-3 w-3 rounded-full"
-                              style={{ backgroundColor: item.color }}
-                              aria-hidden="true"
-                            />
-                            {item.label}
-                          </span>
-                          <span className="font-semibold text-charcoal">
-                            {formatNumber(item.count)}{' '}
-                            <span className="font-normal text-charcoal-muted">({pct}%)</span>
-                          </span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                          <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${pct}%`,
-                              backgroundColor: item.color,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )
-                  })}
+                <div className="mt-2 flex w-full justify-center gap-4 border-t border-carbon-gray-20 pt-3 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 bg-danger" />
+                    <span className="font-semibold text-carbon-gray-100">HIGH ({highCount})</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 bg-amber-500" />
+                    <span className="font-semibold text-carbon-gray-100">MED ({mediumCount})</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 bg-success" />
+                    <span className="font-semibold text-carbon-gray-100">LOW ({lowCount})</span>
+                  </div>
                 </div>
               </div>
             )}
           </ChartCard>
         </div>
 
-        {/* Right Column: High Risk Appointments Table & Filtering */}
         <div className="lg:col-span-8">
-          <Card className="flex h-full flex-col shadow-card">
+          <Card>
             <CardHeader
               title={
                 <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-5 w-5 text-danger" />
-                  <span>High-Risk Appointments</span>
+                  <ShieldAlert className="h-4 w-4 text-danger" />
+                  <span>HIGH-RISK APPOINTMENT QUEUE</span>
                   <Badge tone="danger">{filteredHighRisk.length}</Badge>
                 </div>
               }
-              subtitle="Appointments flagged with HIGH scheduling risk requiring operational review"
+              subtitle="Appointments flagged with HIGH scheduling risk score requiring operational attention."
             />
-            <CardContent className="flex-1 space-y-4">
-              {/* Controls Header: Search & Factor Filter */}
+            <CardContent className="space-y-4 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                {/* Search Input */}
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal-muted" />
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-carbon-gray-50" />
                   <input
-                    type="text"
+                    type="search"
+                    placeholder="Search by patient, doctor, clinic..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search patient, doctor, clinic, or factor..."
-                    className="w-full rounded-lg border border-border bg-surface pl-9 pr-4 py-2 text-sm text-charcoal placeholder-charcoal-muted transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    className="h-8 w-full rounded-none border border-carbon-gray-30 bg-surface pl-8 pr-3 text-xs text-carbon-gray-100 placeholder-carbon-gray-50 focus:border-primary-500 focus:outline-none"
                   />
                 </div>
 
-                {/* Risk Factor Filter Dropdown */}
                 {allFactors.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-charcoal-muted" />
+                    <Filter className="h-3.5 w-3.5 text-carbon-gray-60" />
                     <select
                       value={selectedFactor}
                       onChange={(e) => setSelectedFactor(e.target.value)}
-                      className="rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-charcoal transition-colors focus:border-primary-500 focus:outline-none"
+                      className="h-8 rounded-none border border-carbon-gray-30 bg-surface px-2 text-xs font-medium text-carbon-gray-100 focus:border-primary-500 focus:outline-none"
                     >
                       <option value="ALL">All Risk Factors ({allFactors.length})</option>
                       {allFactors.map((factor) => (
@@ -288,37 +251,39 @@ export function SchedulingRiskPage() {
                 )}
               </div>
 
-              {/* Table Render */}
               {filteredHighRisk.length === 0 ? (
                 <EmptyState
-                  title="No high-risk appointments match filter"
-                  description={searchQuery || selectedFactor !== 'ALL' ? 'Try adjusting your search criteria or factor filter.' : 'No appointments are currently flagged as high risk.'}
+                  title="No high-risk appointments match criteria"
+                  description={
+                    searchQuery || selectedFactor !== 'ALL'
+                      ? 'Try clearing your search term or factor filter.'
+                      : 'No appointments are currently flagged as High Risk.'
+                  }
                 />
               ) : (
                 <Table
                   columns={[
-                    { key: 'patient', label: 'Patient' },
+                    { key: 'patient', label: 'Patient Specification' },
                     { key: 'doctor', label: 'Doctor & Clinic' },
                     { key: 'no_show', label: 'No-show Risk', align: 'right' as const },
                     { key: 'wait', label: 'Est. Wait', align: 'right' as const },
                     { key: 'score', label: 'Risk Score', align: 'center' as const },
-                    { key: 'factors', label: 'Risk Factors' },
+                    { key: 'factors', label: 'Contributing Risk Factors' },
                   ]}
                 >
                   {filteredHighRisk.map((item) => {
                     const isHighProb = item.no_show_probability >= 0.7
                     return (
-                      <tr key={item.id} className="transition-colors hover:bg-gray-50/70">
-                        {/* Patient Cell */}
-                        <td className="px-4 py-3.5">
+                      <tr key={item.id} className="cds-table-row">
+                        <td className="px-3.5 py-2.5">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700">
-                              <User className="h-4 w-4" />
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center bg-carbon-gray-10 text-carbon-gray-100">
+                              <User className="h-3.5 w-3.5" />
                             </div>
                             <div>
-                              <p className="font-semibold text-charcoal">{item.patient_name || 'Unknown Patient'}</p>
+                              <p className="font-semibold text-carbon-gray-100">{item.patient_name || 'Unknown Patient'}</p>
                               {item.appointment_date && (
-                                <p className="text-xs text-charcoal-muted">
+                                <p className="text-[11px] font-mono text-carbon-gray-60">
                                   {new Date(item.appointment_date).toLocaleDateString(undefined, {
                                     month: 'short',
                                     day: 'numeric',
@@ -330,63 +295,58 @@ export function SchedulingRiskPage() {
                           </div>
                         </td>
 
-                        {/* Doctor & Clinic Cell */}
-                        <td className="px-4 py-3.5">
+                        <td className="px-3.5 py-2.5">
                           <div className="space-y-0.5">
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-charcoal">
-                              <Stethoscope className="h-3.5 w-3.5 text-primary-600" />
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-carbon-gray-100">
+                              <Stethoscope className="h-3 w-3 text-primary-500 shrink-0" />
                               <span>{item.doctor_name || 'Unknown Doctor'}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs text-charcoal-muted">
-                              <Building2 className="h-3.5 w-3.5" />
+                            <div className="flex items-center gap-1.5 text-[11px] text-carbon-gray-60">
+                              <Building2 className="h-3 w-3 shrink-0" />
                               <span>{item.clinic_name || 'General Clinic'}</span>
                             </div>
                           </div>
                         </td>
 
-                        {/* No-show Probability */}
-                        <td className="px-4 py-3.5 text-right font-medium">
+                        <td className="px-3.5 py-2.5 text-right font-mono font-semibold">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold ${
+                            className={`inline-flex items-center gap-1 rounded-none px-2 py-0.5 text-[11px] font-mono font-bold ${
                               isHighProb
-                                ? 'bg-danger/10 text-danger border border-danger/20'
-                                : 'bg-warning/10 text-warning border border-warning/20'
+                                ? 'bg-red-50 text-danger border border-red-200'
+                                : 'bg-amber-50 text-amber-800 border border-amber-200'
                             }`}
                           >
                             {formatProbability(item.no_show_probability)}
                           </span>
                         </td>
 
-                        {/* Expected Wait Time */}
-                        <td className="px-4 py-3.5 text-right font-medium text-charcoal">
+                        <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">
                           <div className="inline-flex items-center gap-1 text-xs">
-                            <Clock className="h-3.5 w-3.5 text-charcoal-muted" />
+                            <Clock className="h-3 w-3 text-carbon-gray-50 shrink-0" />
                             <span>{formatMinutes(item.expected_waiting_time)}</span>
                           </div>
                         </td>
 
-                        {/* Risk Score */}
-                        <td className="px-4 py-3.5 text-center">
-                          <span className="inline-flex items-center justify-center rounded-full bg-danger/15 px-3 py-1 text-xs font-bold text-danger border border-danger/25">
+                        <td className="px-3.5 py-2.5 text-center">
+                          <span className="inline-flex items-center justify-center bg-red-50 px-2 py-0.5 font-mono text-xs font-bold text-danger border border-red-200">
                             <Sparkles className="mr-1 h-3 w-3" />
                             {item.risk_score}
                           </span>
                         </td>
 
-                        {/* Risk Factors Chips */}
-                        <td className="px-4 py-3.5">
+                        <td className="px-3.5 py-2.5">
                           <div className="flex flex-wrap gap-1">
                             {item.risk_factors && item.risk_factors.length > 0 ? (
                               item.risk_factors.map((factor, idx) => (
                                 <span
                                   key={idx}
-                                  className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-charcoal hover:bg-gray-200 transition-colors"
+                                  className="inline-flex items-center bg-carbon-gray-10 px-1.5 py-0.5 text-[10px] font-mono text-carbon-gray-70 border border-carbon-gray-20"
                                 >
                                   {factor}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-xs text-charcoal-muted">—</span>
+                              <span className="text-xs text-carbon-gray-50">—</span>
                             )}
                           </div>
                         </td>

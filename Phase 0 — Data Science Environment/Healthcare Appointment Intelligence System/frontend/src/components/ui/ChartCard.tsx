@@ -10,9 +10,9 @@ interface ChartCardProps {
 
 export function ChartCard({ title, subtitle, action, children }: ChartCardProps) {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader title={title} subtitle={subtitle} action={action} />
-      <div className="px-5 py-4">{children}</div>
+      <div className="p-4">{children}</div>
     </Card>
   )
 }

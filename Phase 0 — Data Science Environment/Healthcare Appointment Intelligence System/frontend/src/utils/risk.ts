@@ -37,7 +37,7 @@ export function riskFromProbability(probability: number | null | undefined): Ris
 }
 
 export const RISK_COLORS: Record<RiskLevel, string> = {
-  LOW: '#15803D',
-  MEDIUM: '#B45309',
-  HIGH: '#B91C1C',
+  LOW: '#198038',
+  MEDIUM: '#B28600',
+  HIGH: '#DA1E28',
 }

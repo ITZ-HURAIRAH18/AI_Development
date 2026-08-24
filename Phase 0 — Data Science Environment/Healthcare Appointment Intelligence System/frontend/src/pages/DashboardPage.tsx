@@ -29,12 +29,14 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
 function chartTooltipStyles() {
   return {
     contentStyle: {
-      borderRadius: 8,
-      border: '1px solid #E5E7EB',
-      fontSize: 12,
+      borderRadius: 0,
+      border: '1px solid #E0E0E0',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+      fontSize: 11,
+      fontFamily: 'IBM Plex Sans, sans-serif',
       background: '#FFFFFF',
     },
-    labelStyle: { fontWeight: 600, color: '#1E293B' },
+    labelStyle: { fontWeight: 700, color: '#161616', textTransform: 'uppercase' as const, letterSpacing: '0.05em' },
   }
 }
 
@@ -58,28 +60,29 @@ export function DashboardPage() {
   const kpiData = kpis.data
 
   const riskDistribution = (chartData?.scheduling_risk_distribution ?? []).map((item) => ({
-    name: `${item._id} risk`,
+    name: `${item._id} Risk`,
     value: item.count,
   }))
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Operational Overview"
-        description="Key performance indicators across clinics and providers."
+        title="Operational Command Center"
+        description="Enterprise operational metrics for appointment volume, waiting time, no-show probability, and clinic utilization."
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           title="Total Appointments"
           value={formatNumber(kpiData?.total_appointments)}
-          subtitle={`${formatNumber(chartData?.appointment_volume.length)} days tracked`}
+          subtitle={`${formatNumber(chartData?.appointment_volume.length)} tracking days recorded`}
           icon={CalendarClock}
+          tone="neutral"
         />
         <StatCard
           title="Predicted No-shows"
           value={formatNumber(kpiData?.predicted_no_shows)}
-          subtitle="Probability ≥ 50%"
+          subtitle="Model probability ≥ 50%"
           icon={UserX}
           tone="warning"
         />
@@ -88,110 +91,112 @@ export function DashboardPage() {
           value={formatMinutes(kpiData?.average_waiting_time)}
           subtitle={`Max doctor load ${Number(kpiData?.average_doctor_load ?? 0).toFixed(2)}`}
           icon={Clock}
+          tone="neutral"
         />
         <StatCard
           title="High Risk Appointments"
           value={formatNumber(kpiData?.high_risk_appointments)}
-          subtitle="Scheduling risk = HIGH"
+          subtitle="Scheduling risk flag = HIGH"
           icon={ShieldAlert}
           tone="danger"
         />
         <StatCard
           title="Clinic Utilization"
           value={formatPercent(kpiData?.clinic_utilization)}
-          subtitle="Average across clinics"
+          subtitle="Capacity average across clinics"
           icon={Gauge}
           tone="success"
         />
         <StatCard
-          title="Doctor Workload"
+          title="Doctor Workload Load"
           value={Number(kpiData?.average_doctor_load ?? 0).toFixed(2)}
-          subtitle="Average doctor load"
+          subtitle="Average active doctor load ratio"
           icon={AlertTriangle}
+          tone="neutral"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ChartCard title="Appointment Volume" subtitle="Appointments per day">
+        <ChartCard title="Appointment Volume" subtitle="Daily appointment throughput">
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={chartData?.appointment_volume ?? []}>
               <defs>
                 <linearGradient id="volume" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#1F6E66" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="#1F6E66" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#0F62FE" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#0F62FE" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(value) => value.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#525252' }} tickFormatter={(value) => value.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...chartTooltipStyles()} />
-              <Area type="monotone" dataKey="appointments" stroke="#1F6E66" fill="url(#volume)" strokeWidth={2} />
+              <Area type="monotone" dataKey="appointments" stroke="#0F62FE" fill="url(#volume)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="No-show Rate" subtitle="No-show rate over time (%)">
+        <ChartCard title="No-show Rate Trend" subtitle="Percentage of no-shows over time (%)">
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={chartData?.no_show_rate ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(value) => value.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} unit="%" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#525252' }} tickFormatter={(value) => value.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} unit="%" />
               <Tooltip {...chartTooltipStyles()} />
-              <Line type="monotone" dataKey="rate" stroke="#B45309" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="rate" stroke="#DA1E28" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Waiting Time Trend" subtitle="Average waiting time (minutes)">
+        <ChartCard title="Waiting Time Trend" subtitle="Average waiting time in minutes">
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={chartData?.waiting_time_trend ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(value) => value.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#525252' }} tickFormatter={(value) => value.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...chartTooltipStyles()} />
-              <Area type="monotone" dataKey="waiting_time" stroke="#475569" fill="#E2E8F0" strokeWidth={2} />
+              <Area type="monotone" dataKey="waiting_time" stroke="#393939" fill="#E0E0E0" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Scheduling Risk" subtitle="Distribution across appointments">
+        <ChartCard title="Scheduling Risk Distribution" subtitle="Risk classification of all predictions">
           {riskDistribution.length === 0 ? (
             <EmptyState title="No risk data" description="Run predictions to build the risk distribution." />
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={riskDistribution} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={3}>
+                <Pie data={riskDistribution} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={4} stroke="#ffffff" strokeWidth={2}>
                   {riskDistribution.map((entry) => (
                     <Cell key={entry.name} fill={RISK_COLORS[(entry.name.split(' ')[0] as RiskLevel) ?? 'LOW']} />
                   ))}
                 </Pie>
                 <Tooltip {...chartTooltipStyles()} />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Legend iconType="square" wrapperStyle={{ fontSize: 11, color: '#161616' }} />
               </PieChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
 
-        <ChartCard title="Clinic Utilization" subtitle="Utilization percentage by clinic">
+        <ChartCard title="Clinic Utilization Breakdown" subtitle="Capacity utilization percentage by clinic">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={(chartData?.clinic_utilization ?? []).map((row) => ({ ...row, name: row.clinic_id }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} unit="%" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} unit="%" />
               <Tooltip {...chartTooltipStyles()} />
-              <Bar dataKey="utilization_percentage" name="Utilization" fill="#1F6E66" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="utilization_percentage" name="Utilization" fill="#0F62FE" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Doctor Workload" subtitle="Appointments per doctor">
+        <ChartCard title="Doctor Workload Distribution" subtitle="Active appointments count per doctor">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={(chartData?.doctor_workload ?? []).slice(0, 15).map((row) => ({ ...row, name: String(row.doctor_id) }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...chartTooltipStyles()} />
-              <Bar dataKey="appointments" name="Appointments" fill="#64748B" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="appointments" name="Appointments" fill="#525252" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>

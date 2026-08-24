@@ -22,27 +22,27 @@ export function DoctorsPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Doctors" description="Provider workload and performance." />
+        <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." />
         <LoadingState rows={10} />
       </div>
     )
   }
 
   return (
-    <div>
-      <PageHeader title="Doctors" description="Provider workload and performance." />
+    <div className="font-sans space-y-4">
+      <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." />
 
       <FilterBar
         search={search}
         onSearchChange={setSearch}
         filters={[
           {
-            label: 'Clinic',
+            label: 'Clinic Filter',
             value: clinicId,
             onChange: setClinicId,
             options: [
-              { value: '', label: 'All clinics' },
-              ...(clinics.data ?? []).map((c) => ({ value: c.clinic_id, label: c.name })),
+              { value: '', label: 'All Clinics Overview' },
+              ...(clinics.data ?? []).map((c) => ({ value: c.clinic_id, label: `${c.clinic_id} — ${c.name}` })),
             ],
           },
         ]}
@@ -56,41 +56,41 @@ export function DoctorsPage() {
       {error ? (
         <ErrorState message={error} onRetry={reload} />
       ) : !data || data.length === 0 ? (
-        <EmptyState title="No doctors found" description="No providers match the current filters." />
+        <EmptyState title="No provider records found" description="No doctor records match the active criteria." />
       ) : (
-        <div className="rounded-lg border border-border bg-surface shadow-card">
+        <div className="border border-carbon-gray-20 bg-surface shadow-card">
           <Table
             columns={[
-              { key: 'doctor_id', label: 'Doctor' },
-              { key: 'specialization', label: 'Specialization' },
-              { key: 'clinic_id', label: 'Clinic' },
-              { key: 'appointments', label: 'Appointments', align: 'right' as const },
+              { key: 'doctor_id', label: 'Doctor Specification' },
+              { key: 'specialization', label: 'Medical Specialization' },
+              { key: 'clinic_id', label: 'Assigned Clinic' },
+              { key: 'appointments', label: 'Total Appointments', align: 'right' as const },
               { key: 'average_waiting_time', label: 'Avg Waiting', align: 'right' as const },
-              { key: 'doctor_load', label: 'Load', align: 'right' as const },
+              { key: 'doctor_load', label: 'Workload Ratio', align: 'right' as const },
               { key: 'no_show_rate', label: 'No-show Rate', align: 'right' as const },
-              { key: 'utilization', label: 'Utilization', align: 'right' as const },
+              { key: 'utilization', label: 'Capacity Utilization', align: 'right' as const },
             ]}
           >
             {data.map((doctor: Doctor) => (
-              <tr key={doctor.id ?? doctor.doctor_id} className="cursor-pointer transition-colors hover:bg-gray-50" onClick={() => navigate(`/doctors/${doctor.id ?? doctor.doctor_id}`)}>
-                <td className="px-4 py-3">
+              <tr key={doctor.id ?? doctor.doctor_id} className="cds-table-row cursor-pointer" onClick={() => navigate(`/doctors/${doctor.id ?? doctor.doctor_id}`)}>
+                <td className="px-3.5 py-2.5">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-primary-700">
+                    <div className="flex h-7 w-7 items-center justify-center bg-carbon-gray-10 text-primary-500">
                       <Stethoscope className="h-4 w-4" aria-hidden="true" />
                     </div>
                     <div>
-                      <p className="font-medium text-charcoal">{doctor.name}</p>
-                      <p className="text-xs text-charcoal-muted">{doctor.doctor_id}</p>
+                      <p className="font-semibold text-carbon-gray-100">{doctor.name}</p>
+                      <p className="text-[11px] font-mono text-carbon-gray-60">{doctor.doctor_id}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-charcoal">{doctor.specialization}</td>
-                <td className="px-4 py-3"><Badge tone="neutral">{doctor.clinic_id}</Badge></td>
-                <td className="px-4 py-3 text-right text-charcoal">{doctor.appointments ?? 0}</td>
-                <td className="px-4 py-3 text-right text-charcoal">{formatMinutes(doctor.average_waiting_time)}</td>
-                <td className="px-4 py-3 text-right text-charcoal">{Number(doctor.doctor_load ?? 0).toFixed(2)}</td>
-                <td className="px-4 py-3 text-right text-charcoal">{formatPercent(doctor.no_show_rate)}</td>
-                <td className="px-4 py-3 text-right font-medium text-charcoal">{formatPercent(doctor.utilization)}</td>
+                <td className="px-3.5 py-2.5 text-carbon-gray-70">{doctor.specialization}</td>
+                <td className="px-3.5 py-2.5"><Badge tone="neutral">{doctor.clinic_id}</Badge></td>
+                <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{doctor.appointments ?? 0}</td>
+                <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{formatMinutes(doctor.average_waiting_time)}</td>
+                <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{Number(doctor.doctor_load ?? 0).toFixed(2)}</td>
+                <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{formatPercent(doctor.no_show_rate)}</td>
+                <td className="px-3.5 py-2.5 text-right font-mono font-bold text-primary-500">{formatPercent(doctor.utilization)}</td>
               </tr>
             ))}
           </Table>

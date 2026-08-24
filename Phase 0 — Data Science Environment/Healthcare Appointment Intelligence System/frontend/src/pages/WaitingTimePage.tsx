@@ -8,7 +8,15 @@ import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
 import { Clock, Gauge, TrendingUp } from 'lucide-react'
 
 function tooltipStyles() {
-  return { contentStyle: { borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12, background: '#FFFFFF' } }
+  return {
+    contentStyle: {
+      borderRadius: 0,
+      border: '1px solid #E0E0E0',
+      fontSize: 11,
+      fontFamily: 'IBM Plex Sans, sans-serif',
+      background: '#FFFFFF',
+    },
+  }
 }
 
 export function WaitingTimePage() {
@@ -28,68 +36,68 @@ export function WaitingTimePage() {
   const stats = data.stats
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Waiting Time Analytics" description="Waiting time statistics across appointments." />
+    <div className="space-y-6 font-sans">
+      <PageHeader title="Waiting Time Analytics & Queue Diagnostics" description="Statistical distributions, clinic averages, and provider queue time trends." />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Average Waiting Time" value={`${Math.round(stats.average)} min`} icon={Clock} />
-        <StatCard title="Median Waiting Time" value={`${Math.round(stats.median)} min`} icon={Gauge} />
-        <StatCard title="Maximum Waiting Time" value={`${Math.round(stats.maximum)} min`} icon={TrendingUp} tone="warning" />
-        <StatCard title="Appointments Analyzed" value={String(stats.count)} icon={Clock} />
+        <StatCard title="AVERAGE WAITING TIME" value={`${Math.round(stats.average)} min`} icon={Clock} tone="neutral" />
+        <StatCard title="MEDIAN WAITING TIME" value={`${Math.round(stats.median)} min`} icon={Gauge} tone="neutral" />
+        <StatCard title="MAXIMUM RECORDED WAIT" value={`${Math.round(stats.maximum)} min`} icon={TrendingUp} tone="warning" />
+        <StatCard title="APPOINTMENTS ANALYZED" value={String(stats.count)} icon={Clock} tone="neutral" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ChartCard title="Waiting Time Distribution" subtitle="Appointments by waiting-time bucket">
+        <ChartCard title="WAITING TIME BUCKET DISTRIBUTION" subtitle="Appointments grouped by duration interval (minutes)">
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={data.distribution.map((d) => ({ name: String(d._id), count: d.count }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+            <BarChart data={data.distribution.map((d) => ({ name: `${String(d._id)} min`, count: d.count }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...tooltipStyles()} />
-              <Bar dataKey="count" name="Appointments" fill="#1F6E66" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" name="Appointments" fill="#0F62FE" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Waiting Time Trend" subtitle="Average waiting time over time (minutes)">
+        <ChartCard title="WAITING TIME TREND DIAGNOSTIC" subtitle="Historical average waiting time per day (minutes)">
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={data.trend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#525252' }} tickFormatter={(v) => v.slice(5)} minTickGap={40} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...tooltipStyles()} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="waiting_time" name="Waiting (min)" stroke="#B45309" strokeWidth={2} dot={false} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Line type="monotone" dataKey="waiting_time" name="Waiting (min)" stroke="#DA1E28" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Waiting Time by Clinic" subtitle="Average minutes per clinic">
+        <ChartCard title="AVERAGE WAITING TIME BY CLINIC" subtitle="Facility benchmark comparison (minutes)">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.by_clinic.map((c) => ({ name: c.clinic_id, minutes: c.average }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...tooltipStyles()} />
-              <Bar dataKey="minutes" name="Avg waiting" fill="#64748B" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="minutes" name="Avg waiting" fill="#525252" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Waiting Time by Doctor" subtitle="Top providers by average waiting time">
+        <ChartCard title="TOP DOCTORS BY WAITING TIME" subtitle="Providers with longest average patient wait times">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.by_doctor.slice(0, 12).map((d) => ({ name: d.doctor_id, minutes: d.average }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} interval={0} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#525252' }} tickLine={false} axisLine={false} interval={0} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
               <Tooltip {...tooltipStyles()} />
-              <Bar dataKey="minutes" name="Avg waiting" fill="#475569" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="minutes" name="Avg waiting" fill="#393939" radius={0} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
-      {data.distribution.length === 0 && <EmptyState title="No waiting-time data" description="Import appointments to see waiting-time analytics." />}
+      {data.distribution.length === 0 && <EmptyState title="No waiting-time data available" description="Import appointments to calculate queue waiting metrics." />}
     </div>
   )
 }

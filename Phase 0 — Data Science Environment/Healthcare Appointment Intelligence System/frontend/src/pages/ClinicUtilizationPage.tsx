@@ -27,61 +27,61 @@ export function ClinicUtilizationPage() {
     )
   }
   if (error || !data) {
-    return <ErrorState message={error ?? 'Unable to load clinic utilization'} onRetry={reload} />
+    return <ErrorState message={error ?? 'Unable to load clinic capacity utilization analytics'} onRetry={reload} />
   }
 
   const rows = data as UtilizationRow[]
   const avgUtilization = rows.length ? rows.reduce((sum, row) => sum + row.utilization_percentage, 0) / rows.length : 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       <PageHeader
-        title="Clinic Utilization"
-        description={`Average utilization across ${rows.length} clinics: ${formatPercent(avgUtilization)}`}
+        title="Clinic Utilization & Capacity Intelligence"
+        description={`Capacity benchmarks across ${rows.length} facilities. Enterprise average: ${formatPercent(avgUtilization)}`}
       />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MiniStat label="Clinics" value={String(rows.length)} />
-        <MiniStat label="Total patients" value={formatNumber(rows.reduce((sum, r) => sum + (r.patient_volume ?? 0), 0))} />
-        <MiniStat label="Avg utilization" value={formatPercent(avgUtilization)} />
-        <MiniStat label="Avg waiting" value={formatMinutes(rows.length ? rows.reduce((sum, r) => sum + (r.average_waiting_time ?? 0), 0) / rows.length : 0)} />
+        <MiniStat label="ACTIVE CLINICS" value={String(rows.length)} />
+        <MiniStat label="TOTAL PATIENTS SERVED" value={formatNumber(rows.reduce((sum, r) => sum + (r.patient_volume ?? 0), 0))} />
+        <MiniStat label="AVG CAPACITY UTILIZATION" value={formatPercent(avgUtilization)} />
+        <MiniStat label="AVERAGE SYSTEM WAIT" value={formatMinutes(rows.length ? rows.reduce((sum, r) => sum + (r.average_waiting_time ?? 0), 0) / rows.length : 0)} />
       </div>
 
-      <ChartCard title="Utilization Comparison" subtitle="Utilization percentage by clinic (average doctor load × 100)">
+      <ChartCard title="FACILITY CAPACITY UTILIZATION BENCHMARK" subtitle="Percentage utilization by clinic ID (doctor load ratio × 100)">
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={rows.map((row) => ({ name: row.clinic_id, utilization: row.utilization_percentage }))}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={45} unit="%" domain={[0, 100]} />
-            <Tooltip {...{ contentStyle: { borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 12, background: '#FFFFFF' } }} />
-            <Bar dataKey="utilization" name="Utilization" fill="#1F6E66" radius={[4, 4, 0, 0]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} unit="%" domain={[0, 100]} />
+            <Tooltip contentStyle={{ borderRadius: 0, border: '1px solid #E0E0E0', fontSize: 11, fontFamily: 'IBM Plex Sans, sans-serif', background: '#FFFFFF' }} />
+            <Bar dataKey="utilization" name="Utilization" fill="#0F62FE" radius={0} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
 
       {rows.length === 0 ? (
-        <EmptyState title="No utilization data" description="Import appointments to calculate clinic utilization." />
+        <EmptyState title="No utilization data available" description="Import appointment schedules to populate capacity utilization." />
       ) : (
         <Card>
           <CardContent className="p-0">
             <Table
               columns={[
-                { key: 'clinic_id', label: 'Clinic' },
-                { key: 'doctors', label: 'Doctors', align: 'right' as const },
-                { key: 'patients', label: 'Patients', align: 'right' as const },
-                { key: 'wait', label: 'Average Wait', align: 'right' as const },
-                { key: 'load', label: 'Doctor Load', align: 'right' as const },
-                { key: 'utilization', label: 'Utilization', align: 'right' as const },
+                { key: 'clinic_id', label: 'Clinic ID' },
+                { key: 'doctors', label: 'Active Doctors', align: 'right' as const },
+                { key: 'patients', label: 'Patient Volume', align: 'right' as const },
+                { key: 'wait', label: 'Average Waiting Time', align: 'right' as const },
+                { key: 'load', label: 'Doctor Workload Load', align: 'right' as const },
+                { key: 'utilization', label: 'Capacity Utilization', align: 'right' as const },
               ]}
             >
               {rows.map((row) => (
-                <tr key={row.clinic_id}>
-                  <td className="px-4 py-3 font-medium text-primary-700">{row.clinic_id}</td>
-                  <td className="px-4 py-3 text-right text-charcoal">{row.doctors_count ?? 0}</td>
-                  <td className="px-4 py-3 text-right text-charcoal">{formatNumber(row.patient_volume)}</td>
-                  <td className="px-4 py-3 text-right text-charcoal">{formatMinutes(row.average_waiting_time)}</td>
-                  <td className="px-4 py-3 text-right text-charcoal">{Number(row.average_doctor_load ?? 0).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right">
+                <tr key={row.clinic_id} className="cds-table-row">
+                  <td className="px-3.5 py-2.5 font-mono font-semibold text-primary-500">{row.clinic_id}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{row.doctors_count ?? 0}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{formatNumber(row.patient_volume)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{formatMinutes(row.average_waiting_time)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{Number(row.average_doctor_load ?? 0).toFixed(2)}</td>
+                  <td className="px-3.5 py-2.5 text-right">
                     <Badge tone={utilizationTone(row.utilization_percentage ?? 0) as 'danger' | 'warning' | 'success'}>
                       {formatPercent(row.utilization_percentage)}
                     </Badge>
@@ -98,9 +98,9 @@ export function ClinicUtilizationPage() {
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <Card className="p-4">
-      <p className="text-xs text-charcoal-muted">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-charcoal">{value}</p>
+    <Card className="p-4 border-t-2 border-t-primary-500">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">{label}</p>
+      <p className="mt-1 text-xl font-bold tracking-tight font-mono text-carbon-gray-100">{value}</p>
     </Card>
   )
 }

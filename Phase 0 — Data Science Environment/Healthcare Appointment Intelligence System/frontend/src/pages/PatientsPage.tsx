@@ -35,7 +35,7 @@ export function PatientsPage() {
         setItems(result.items)
         setTotal(result.total)
       })
-      .catch(() => setError('Unable to load patients.'))
+      .catch(() => setError('Unable to load patient directory.'))
       .finally(() => active && setLoading(false))
     return () => {
       active = false
@@ -56,13 +56,13 @@ export function PatientsPage() {
   const columns = useMemo(
     () => [
       { key: 'patient_id', label: 'Patient ID' },
-      { key: 'name', label: 'Name' },
+      { key: 'name', label: 'Full Name' },
       { key: 'age', label: 'Age', align: 'right' as const },
       { key: 'gender', label: 'Gender' },
-      { key: 'appointments', label: 'Appointments', align: 'right' as const },
-      { key: 'no_show_rate', label: 'No-show Rate', align: 'right' as const },
-      { key: 'last_appointment', label: 'Last Appointment' },
-      { key: 'risk_status', label: 'Risk Status' },
+      { key: 'appointments', label: 'Total Appointments', align: 'right' as const },
+      { key: 'no_show_rate', label: 'Historical No-show Rate', align: 'right' as const },
+      { key: 'last_appointment', label: 'Last Active Appointment' },
+      { key: 'risk_status', label: 'Patient Risk Profile' },
     ],
     [],
   )
@@ -70,34 +70,34 @@ export function PatientsPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Patients" description="View patient history and risk status." />
+        <PageHeader title="Patient Intelligence Directory" description="Enterprise records for historical patient attendance and risk profile classification." />
         <LoadingState rows={10} />
       </div>
     )
   }
 
   return (
-    <div>
-      <PageHeader title="Patients" description="View patient history and risk status." />
+    <div className="font-sans space-y-4">
+      <PageHeader title="Patient Intelligence Directory" description="Enterprise records for historical patient attendance and risk profile classification." />
       <FilterBar search={search} onSearchChange={(value) => updateParam('search', value)} />
 
       {error ? (
         <ErrorState message={error} />
       ) : items.length === 0 ? (
-        <EmptyState title="No patients found" description="Adjust your search to find patients." />
+        <EmptyState title="No patient records found" description="Adjust your filter terms or patient ID query." />
       ) : (
-        <div className="rounded-lg border border-border bg-surface shadow-card">
+        <div className="border border-carbon-gray-20 bg-surface shadow-card">
           <Table columns={columns}>
             {items.map((patient) => (
-              <tr key={patient.id} className="cursor-pointer transition-colors hover:bg-gray-50" onClick={() => navigate(`/patients/${patient.id}`)}>
-                <td className="px-4 py-3 font-medium text-primary-700">{patient.patient_id}</td>
-                <td className="px-4 py-3 text-charcoal">{patient.name}</td>
-                <td className="px-4 py-3 text-right text-charcoal">{patient.age}</td>
-                <td className="px-4 py-3 text-charcoal">{patient.gender}</td>
-                <td className="px-4 py-3 text-right text-charcoal">{formatNumber(patient.appointments)}</td>
-                <td className="px-4 py-3 text-right text-charcoal">{formatPercent(patient.no_show_rate)}</td>
-                <td className="px-4 py-3 text-charcoal">{formatDate(patient.last_appointment)}</td>
-                <td className="px-4 py-3">
+              <tr key={patient.id} className="cds-table-row cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
+                <td className="px-3.5 py-2.5 font-mono font-semibold text-primary-500">{patient.patient_id}</td>
+                <td className="px-3.5 py-2.5 font-semibold text-carbon-gray-100">{patient.name}</td>
+                <td className="px-3.5 py-2.5 text-right text-carbon-gray-100 font-mono">{patient.age}</td>
+                <td className="px-3.5 py-2.5 text-carbon-gray-70 font-mono">{patient.gender}</td>
+                <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{formatNumber(patient.appointments)}</td>
+                <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{formatPercent(patient.no_show_rate)}</td>
+                <td className="px-3.5 py-2.5 text-carbon-gray-70 font-mono">{formatDate(patient.last_appointment)}</td>
+                <td className="px-3.5 py-2.5">
                   <Badge tone={getRiskStyle(patient.risk_status ?? 'LOW').dot === 'bg-danger' ? 'danger' : getRiskStyle(patient.risk_status ?? 'LOW').dot === 'bg-warning' ? 'warning' : 'success'}>
                     {getRiskStyle(patient.risk_status ?? 'LOW').label}
                   </Badge>

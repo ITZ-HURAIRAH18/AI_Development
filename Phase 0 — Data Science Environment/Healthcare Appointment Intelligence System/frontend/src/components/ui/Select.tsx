@@ -8,15 +8,15 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({ label, options, className = '', id, ...props }: SelectProps) {
   const selectId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={selectId} className="text-sm font-medium text-charcoal">
+        <label htmlFor={selectId} className="text-[11px] font-bold uppercase tracking-wider text-carbon-gray-70">
           {label}
         </label>
       )}
       <select
         id={selectId}
-        className={`h-10 rounded-md border border-border bg-white px-3 text-sm text-charcoal transition-colors focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-100 ${className}`}
+        className={`h-9 rounded-none border border-carbon-gray-30 bg-surface px-3 text-xs font-medium text-carbon-gray-100 transition-colors focus:border-primary-500 focus:outline-none ${className}`}
         {...props}
       >
         {options.map((option) => (

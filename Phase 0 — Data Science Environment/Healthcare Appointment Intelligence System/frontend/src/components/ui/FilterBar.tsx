@@ -14,7 +14,7 @@ interface FilterBarProps {
 
 export function FilterBar({ search, onSearchChange, filters = [], clearable = false, onClear, children }: FilterBarProps) {
   return (
-    <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-3 shadow-card">
+    <div className="mb-4 flex flex-wrap items-end gap-3 border border-carbon-gray-20 bg-surface p-3 shadow-card">
       {search !== undefined && onSearchChange && (
         <div className="min-w-48 flex-1">
           <SearchInput value={search} onChange={onSearchChange} />
@@ -28,10 +28,10 @@ export function FilterBar({ search, onSearchChange, filters = [], clearable = fa
       {clearable && onClear && (
         <button
           onClick={onClear}
-          className="inline-flex h-10 items-center gap-1.5 rounded-md border border-border bg-white px-3 text-sm text-charcoal-muted hover:bg-gray-50 hover:text-charcoal"
+          className="inline-flex h-9 items-center gap-1.5 rounded-none border border-carbon-gray-30 bg-surface px-3 text-xs font-semibold uppercase tracking-wider text-carbon-gray-70 hover:bg-carbon-gray-10 hover:text-carbon-gray-100 transition-all"
         >
-          <X className="h-4 w-4" aria-hidden="true" />
-          Clear
+          <X className="h-3.5 w-3.5" aria-hidden="true" />
+          Reset Filters
         </button>
       )}
       {children}
