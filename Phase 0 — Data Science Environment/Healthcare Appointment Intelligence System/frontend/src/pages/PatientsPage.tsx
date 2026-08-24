@@ -1,4 +1,16 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { FilterBar } from '@/components/ui/FilterBar'
+import { Table } from '@/components/ui/Table'
+import { Badge } from '@/components/ui/Badge'
+import { Pagination } from '@/components/ui/Pagination'
+import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { useDebounce } from '@/hooks/useDebounce'
+import { patientApi } from '@/services/patientApi'
+import { formatDate, formatNumber, formatPercent } from '@/utils/format'
+import { getRiskStyle } from '@/utils/risk'
+import type { Patient } from '@/types'
 
 export function PatientsPage() {
   const navigate = useNavigate()
@@ -38,64 +50,77 @@ export function PatientsPage() {
       if (value) next.set(key, value)
       else next.delete(key)
       if (key !== 'page') next.delete('page')
-      setSearchParams(next, { replace: true })
+      setSearchParams(next)
     },
     [searchParams, setSearchParams],
   )
 
-  const columns = useMemo(
-    () => [
-      { key: 'patient_id', label: 'Patient ID' },
-      { key: 'name', label: 'Full Name' },
-      { key: 'age', label: 'Age', align: 'right' as const },
-      { key: 'gender', label: 'Gender' },
-      { key: 'appointments', label: 'Total Appointments', align: 'right' as const },
-      { key: 'no_show_rate', label: 'Historical No-show Rate', align: 'right' as const },
-      { key: 'last_appointment', label: 'Last Active Appointment' },
-      { key: 'risk_status', label: 'Patient Risk Profile' },
-    ],
-    [],
+  const pagination = useMemo(
+    () => ({
+      page,
+      limit: 20,
+      total,
+      totalPages: Math.ceil(total / 20) || 1,
+    }),
+    [page, total],
   )
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <PageHeader title="Patient Intelligence Directory" description="Enterprise records for historical patient attendance and risk profile classification." />
-        <LoadingState rows={10} />
-      </div>
-    )
-  }
-
   return (
-    <div className="font-sans space-y-4">
-      <PageHeader title="Patient Intelligence Directory" description="Enterprise records for historical patient attendance and risk profile classification." />
-      <FilterBar search={search} onSearchChange={(value) => updateParam('search', value)} />
+    <div className="space-y-4 font-sans">
+      <PageHeader title="Patient Intelligence Directory" description="Registered patient specifications, historical no-show profiles, and appointment records." />
 
-      {error ? (
-        <ErrorState message={error} />
+      <FilterBar
+        search={search}
+        onSearchChange={(val) => updateParam('search', val)}
+        placeholder="Search patient by name, ID, neighbourhood..."
+        clearable
+        onClear={() => setSearchParams(new URLSearchParams())}
+      />
+
+      {loading ? (
+        <LoadingState rows={10} />
+      ) : error ? (
+        <ErrorState message={error} onRetry={() => updateParam('page', String(page))} />
       ) : items.length === 0 ? (
-        <EmptyState title="No patient records found" description="Adjust your filter terms or patient ID query." />
+        <EmptyState title="No patient records found" description="Try adjusting your search terms or active clinic filter." />
       ) : (
         <div className="border border-carbon-gray-20 bg-surface shadow-card">
-          <Table columns={columns}>
-            {items.map((patient) => (
-              <tr key={patient.id} className="cds-table-row cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
-                <td className="px-3.5 py-2.5 font-mono font-semibold text-primary-500">{patient.patient_id}</td>
-                <td className="px-3.5 py-2.5 font-semibold text-carbon-gray-100">{patient.name}</td>
-                <td className="px-3.5 py-2.5 text-right text-carbon-gray-100 font-mono">{patient.age}</td>
-                <td className="px-3.5 py-2.5 text-carbon-gray-70 font-mono">{patient.gender}</td>
-                <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{formatNumber(patient.appointments)}</td>
-                <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{formatPercent(patient.no_show_rate)}</td>
-                <td className="px-3.5 py-2.5 text-carbon-gray-70 font-mono">{formatDate(patient.last_appointment)}</td>
-                <td className="px-3.5 py-2.5">
-                  <Badge tone={getRiskStyle(patient.risk_status ?? 'LOW').dot === 'bg-danger' ? 'danger' : getRiskStyle(patient.risk_status ?? 'LOW').dot === 'bg-warning' ? 'warning' : 'success'}>
-                    {getRiskStyle(patient.risk_status ?? 'LOW').label}
-                  </Badge>
-                </td>
-              </tr>
-            ))}
+          <Table
+            columns={[
+              { key: 'patient_id', label: 'Patient Specification' },
+              { key: 'gender', label: 'Gender / Age' },
+              { key: 'neighbourhood', label: 'Neighbourhood' },
+              { key: 'appointments', label: 'Total Visits', align: 'right' as const },
+              { key: 'no_show_rate', label: 'No-show Rate', align: 'right' as const },
+              { key: 'risk_level', label: 'Risk Rating', align: 'center' as const },
+              { key: 'last_visit', label: 'Last Visit Date', align: 'right' as const },
+            ]}
+          >
+            {items.map((patient) => {
+              const riskStyle = getRiskStyle(patient.risk_level ?? 'LOW')
+              return (
+                <tr key={patient.id} className="cds-table-row cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
+                  <td className="px-3.5 py-2.5">
+                    <div>
+                      <p className="font-semibold text-carbon-gray-100">{patient.name}</p>
+                      <p className="text-[11px] font-mono text-carbon-gray-60">{patient.patient_id}</p>
+                    </div>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-carbon-gray-70">{patient.gender} · {patient.age} yrs</td>
+                  <td className="px-3.5 py-2.5 text-carbon-gray-70">{patient.neighbourhood}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{formatNumber(patient.appointments_count)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{formatPercent(patient.no_show_rate)}</td>
+                  <td className="px-3.5 py-2.5 text-center">
+                    <Badge tone={riskStyle.tone}>{patient.risk_level ?? 'LOW'}</Badge>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-70">{formatDate(patient.last_appointment_date)}</td>
+                </tr>
+              )
+            })}
           </Table>
-          <Pagination page={page} total={total} limit={20} onPageChange={(nextPage) => updateParam('page', String(nextPage))} />
+          <div className="p-3 border-t border-carbon-gray-20 bg-carbon-gray-10">
+            <Pagination pagination={pagination} onPageChange={(p) => updateParam('page', String(p))} />
+          </div>
         </div>
       )}
     </div>
