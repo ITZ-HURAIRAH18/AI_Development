@@ -67,6 +67,27 @@ header select option {
   color: #FFFFFF !important;
 }
 
+/* Custom Sleek Enterprise Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #C6C6C6;
+  border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8D8D8D;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #C6C6C6 transparent;
+}
+
 /* Skeleton shimmer */
 .skeleton {
   @apply relative overflow-hidden bg-gray-200/80;

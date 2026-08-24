@@ -116,7 +116,7 @@ export function AppLayout() {
     <div className="flex min-h-screen bg-background font-sans">
       {/* Carbon Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 flex-col border-r border-carbon-gray-20 bg-surface shadow-card lg:static lg:z-auto lg:flex ${sidebarOpen ? 'flex' : 'hidden'}`}
+        className={`fixed inset-y-0 left-0 z-40 w-64 flex-col border-r border-carbon-gray-20 bg-surface shadow-card lg:sticky lg:top-0 lg:h-screen lg:z-30 lg:flex ${sidebarOpen ? 'flex' : 'hidden'}`}
         aria-label="Sidebar"
       >
         {/* Sidebar Brand Header */}
@@ -131,7 +131,7 @@ export function AppLayout() {
         </div>
 
         {/* Grouped Sidebar Items */}
-        <nav className="flex-1 overflow-y-auto px-0 py-3">
+        <nav className="flex-1 overflow-y-auto pr-0.5 py-3">
           {NAV_GROUPS.map((group) => {
             const filteredItems = group.items.filter(
               (item) => !item.roles || (user?.role ? item.roles.includes(user.role as Role) : false),
