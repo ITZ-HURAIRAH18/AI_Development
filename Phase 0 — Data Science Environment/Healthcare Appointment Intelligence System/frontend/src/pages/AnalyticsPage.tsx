@@ -16,9 +16,9 @@ function tooltipStyles() {
 
 export function AnalyticsPage() {
   const [clinicId, setClinicId] = useState('')
-  const charts = useApi(() => analyticsApi.charts({ clinic_id: clinicId }), [clinicId])
-  const advanced = useApi(() => analyticsApi.advanced({ clinic_id: clinicId }), [clinicId])
-  const clinics = useApi(() => clinicApi.list(), [])
+  const charts = useApi(() => analyticsApi.charts({ clinic_id: clinicId }), [clinicId], `analytics-charts-${clinicId}`)
+  const advanced = useApi(() => analyticsApi.advanced({ clinic_id: clinicId }), [clinicId], `analytics-advanced-${clinicId}`)
+  const clinics = useApi(() => clinicApi.list(), [], 'analytics-clinics')
 
   if (charts.loading || advanced.loading) {
     return (

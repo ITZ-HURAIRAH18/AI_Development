@@ -155,30 +155,33 @@ async def waiting_time_analytics(db, clinic_id: str = "", doctor_id: str = "", s
     match = _base_match(clinic_id, doctor_id, start, end)
     appointments = db["appointments"]
 
-    cursor = appointments.find(match, {"waiting_time": 1})
-    raw_values = [doc.get("waiting_time") for doc in await cursor.to_list(length=None)]
-    values: list[float] = []
-    for value in raw_values:
-        if value is None:
-            continue
-        try:
-            values.append(float(value))
-        except (TypeError, ValueError):
-            # Ignore malformed waiting-time values instead of failing the endpoint.
-            continue
-
-    if not values:
+    # Compute summary stats directly in MongoDB via aggregation pipeline (zero network memory load)
+    stats_pipeline = [
+        {"$match": {**match, "waiting_time": {"$type": "number"}}},
+        {
+            "$group": {
+                "_id": None,
+                "average": {"$avg": "$waiting_time"},
+                "maximum": {"$max": "$waiting_time"},
+                "count": {"$sum": 1},
+            }
+        },
+    ]
+    stats_agg = await aggregate_to_list(appointments, stats_pipeline)
+    if not stats_agg:
         stats = {"average": 0, "median": 0, "maximum": 0, "count": 0}
     else:
-        sorted_values = sorted(values)
-        n = len(sorted_values)
-        median = sorted_values[n // 2] if n % 2 else (sorted_values[n // 2 - 1] + sorted_values[n // 2]) / 2
-        stats = {
-            "average": round(sum(sorted_values) / n, 1),
-            "median": round(median, 1),
-            "maximum": round(max(sorted_values), 1),
-            "count": n,
-        }
+        agg = stats_agg[0]
+        count = agg.get("count", 0)
+        avg = round(agg.get("average", 0) or 0, 1)
+        maximum = round(agg.get("maximum", 0) or 0, 1)
+        median = avg
+        if count > 0:
+            mid_offset = count // 2
+            mid_docs = await appointments.find({**match, "waiting_time": {"$type": "number"}}, {"waiting_time": 1}).sort("waiting_time", 1).skip(mid_offset).limit(1).to_list(length=1)
+            if mid_docs:
+                median = round(float(mid_docs[0].get("waiting_time", avg)), 1)
+        stats = {"average": avg, "median": median, "maximum": maximum, "count": count}
 
     # Distribution via bucket (skip documents without a numeric waiting_time,
     # because $bucket fails on null values)
@@ -264,19 +267,44 @@ async def scheduling_risk_analytics(db, clinic_id: str = "", start: str = "", en
     )
     from app.models import serialize_doc
 
+    # Bulk-fetch all associated appointments, patients, doctors, and clinics in 4 batch queries
+    app_oids = [a_oid for pred in high_risk if (a_oid := _to_object_id(pred.get("appointment_id")))]
+    appointments_map = {}
+    if app_oids:
+        app_list = await db["appointments"].find({"_id": {"$in": app_oids}}).to_list(length=len(app_oids))
+        appointments_map = {doc["_id"]: doc for doc in app_list}
+
+    patient_oids = [p_oid for app in appointments_map.values() if (p_oid := _to_object_id(app.get("patient_id")))]
+    patients_map = {}
+    if patient_oids:
+        p_list = await db["patients"].find({"_id": {"$in": patient_oids}}).to_list(length=len(patient_oids))
+        patients_map = {doc["_id"]: doc for doc in p_list}
+
+    doctor_ids = list({app.get("doctor_id") for app in appointments_map.values() if app.get("doctor_id")})
+    doctors_map = {}
+    if doctor_ids:
+        d_list = await db["doctors"].find({"doctor_id": {"$in": doctor_ids}}).to_list(length=len(doctor_ids))
+        doctors_map = {doc["doctor_id"]: doc for doc in d_list}
+
+    clinic_ids = list({app.get("clinic_id") for app in appointments_map.values() if app.get("clinic_id")})
+    clinics_map = {}
+    if clinic_ids:
+        c_list = await db["clinics"].find({"clinic_id": {"$in": clinic_ids}}).to_list(length=len(clinic_ids))
+        clinics_map = {doc["clinic_id"]: doc for doc in c_list}
+
     high_risk_items = []
     for pred in high_risk:
         item = serialize_doc(pred)
         oid = _to_object_id(pred.get("appointment_id"))
-        appointment = await db["appointments"].find_one({"_id": oid}) if oid is not None else None
+        appointment = appointments_map.get(oid) if oid else None
         patient = None
         doctor = None
         clinic = None
         if appointment:
             patient_oid = _to_object_id(appointment.get("patient_id"))
-            patient = await db["patients"].find_one({"_id": patient_oid}) if patient_oid is not None else None
-            doctor = await db["doctors"].find_one({"doctor_id": appointment.get("doctor_id")})
-            clinic = await db["clinics"].find_one({"clinic_id": appointment.get("clinic_id")})
+            patient = patients_map.get(patient_oid) if patient_oid else None
+            doctor = doctors_map.get(appointment.get("doctor_id"))
+            clinic = clinics_map.get(appointment.get("clinic_id"))
         item["patient_name"] = patient.get("name", "Unknown") if patient else "Unknown"
         item["doctor_name"] = doctor.get("name", "Unknown") if doctor else "Unknown"
         item["clinic_name"] = clinic.get("name", "Unknown") if clinic else "Unknown"

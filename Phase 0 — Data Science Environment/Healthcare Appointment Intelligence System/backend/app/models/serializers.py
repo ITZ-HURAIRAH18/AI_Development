@@ -8,10 +8,12 @@ async def aggregate_to_list(collection, pipeline: List[dict[str, Any]]) -> List[
     return [serialize_doc(doc) for doc in await cursor.to_list(length=None)]
 
 
-async def find_to_list(collection, query: dict, sort: list | None = None, limit: int | None = None) -> List[dict]:
+async def find_to_list(collection, query: dict, sort: list | None = None, skip: int | None = None, limit: int | None = None) -> List[dict]:
     cursor = collection.find(query)
     if sort:
         cursor = cursor.sort(sort)
+    if skip:
+        cursor = cursor.skip(skip)
     if limit:
         cursor = cursor.limit(limit)
     return [serialize_doc(doc) for doc in await cursor.to_list(length=limit or None)]

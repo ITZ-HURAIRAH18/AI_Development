@@ -56,7 +56,7 @@ async def get_doctor_detail(db, doctor_object_id: str) -> Optional[dict]:
         return None
 
     doctor_id = doc.get("doctor_id")
-    workload = await compute_doctor_workload(db)
+    workload = await compute_doctor_workload(db, clinic_id=doc.get("clinic_id"))
     workload_map = {w["doctor_id"]: w for w in workload}
 
     clinic = await db["clinics"].find_one({"clinic_id": doc.get("clinic_id")})

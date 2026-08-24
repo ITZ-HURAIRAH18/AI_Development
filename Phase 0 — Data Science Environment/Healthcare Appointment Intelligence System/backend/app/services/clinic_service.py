@@ -51,9 +51,7 @@ async def get_clinic_detail(db, clinic_object_id: str) -> Optional[dict]:
     from bson import ObjectId as BsonObjectId
 
     risk_distribution = {"LOW": 0, "MEDIUM": 0, "HIGH": 0}
-    appointment_ids = [a["id"] for a in await find_to_list(
-        db["appointments"], {"clinic_id": clinic_id}
-    )]
+    appointment_ids = [str(a["_id"]) for a in await db["appointments"].find({"clinic_id": clinic_id}, {"_id": 1}).to_list(length=None)]
     if appointment_ids:
         bucket = await aggregate_to_list(
             db["predictions"],

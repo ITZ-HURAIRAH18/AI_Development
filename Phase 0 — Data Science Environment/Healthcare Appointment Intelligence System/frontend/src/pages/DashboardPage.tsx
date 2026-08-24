@@ -39,8 +39,8 @@ function chartTooltipStyles() {
 }
 
 export function DashboardPage() {
-  const kpis = useApi(() => analyticsApi.dashboard(), [])
-  const charts = useApi(() => analyticsApi.charts(), [])
+  const kpis = useApi(() => analyticsApi.dashboard(), [], 'dashboard-kpis')
+  const charts = useApi(() => analyticsApi.charts(), [], 'dashboard-charts')
 
   if (charts.loading) {
     return (

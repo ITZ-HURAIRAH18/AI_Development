@@ -103,7 +103,8 @@ async def list_appointments(
         total = await count_documents(db["appointments"], query)
 
     sort = [(sort_by, 1 if sort_order == "asc" else -1)]
-    docs = await find_to_list(db["appointments"], query, sort=sort, limit=limit)
+    skip = (page - 1) * limit
+    docs = await find_to_list(db["appointments"], query, sort=sort, skip=skip, limit=limit)
 
     items = []
     prediction_map = await _predictions_by_appointments(db, [d.get("id", "") for d in docs])

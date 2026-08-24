@@ -32,11 +32,29 @@ async def connect_to_database() -> AsyncIOMotorDatabase | None:
     try:
         await _client.admin.command("ping")
         logger.info("Connected to MongoDB database '%s'", settings.database_name)
+        # Create performance indexes asynchronously in background
+        await _create_database_indexes(_database)
     except Exception:
         logger.exception("MongoDB connection failed")
         _database = None
 
     return _database
+
+
+async def _create_database_indexes(db: AsyncIOMotorDatabase) -> None:
+    try:
+        await db["predictions"].create_index([("scheduling_risk", 1), ("risk_score", -1)])
+        await db["predictions"].create_index([("appointment_id", 1)], unique=True)
+        await db["appointments"].create_index([("clinic_id", 1)])
+        await db["appointments"].create_index([("doctor_id", 1)])
+        await db["appointments"].create_index([("patient_id", 1)])
+        await db["appointments"].create_index([("appointment_day", 1)])
+        await db["doctors"].create_index([("doctor_id", 1)], unique=True)
+        await db["clinics"].create_index([("clinic_id", 1)], unique=True)
+        await db["patients"].create_index([("patient_id", 1)], unique=True)
+    except Exception as exc:
+        logger.warning("Could not create database indexes: %s", exc)
+
 
 
 async def close_database_connection() -> None:

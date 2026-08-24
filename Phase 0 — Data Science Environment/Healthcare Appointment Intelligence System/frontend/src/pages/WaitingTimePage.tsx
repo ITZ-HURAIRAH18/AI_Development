@@ -12,7 +12,7 @@ function tooltipStyles() {
 }
 
 export function WaitingTimePage() {
-  const { data, loading, error, reload } = useApi(() => analyticsApi.waitingTime({}), [])
+  const { data, loading, error, reload } = useApi(() => analyticsApi.waitingTime({}), [], 'waiting-time')
 
   if (loading) {
     return (

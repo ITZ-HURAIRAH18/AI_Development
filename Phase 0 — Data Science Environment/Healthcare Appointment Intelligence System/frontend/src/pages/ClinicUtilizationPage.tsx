@@ -17,7 +17,7 @@ function utilizationTone(value: number) {
 }
 
 export function ClinicUtilizationPage() {
-  const { data, loading, error, reload } = useApi(() => clinicApi.utilization({}), [])
+  const { data, loading, error, reload } = useApi(() => clinicApi.utilization({}), [], 'clinic-utilization')
 
   if (loading) {
     return (

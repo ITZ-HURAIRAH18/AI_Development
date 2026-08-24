@@ -70,7 +70,7 @@ async def compute_clinic_utilization(
                     ]
                 },
                 "utilization_percentage": {
-                    "$min": [{"$multiply": [{"$avg": "$doctor_load"}, 100]}, 100]
+                    "$min": [{"$multiply": ["$average_doctor_load", 100]}, 100]
                 },
             }
         },
@@ -123,7 +123,7 @@ async def compute_doctor_workload(
                     ]
                 },
                 "utilization": {
-                    "$min": [{"$multiply": [{"$avg": "$doctor_load"}, 100]}, 100]
+                    "$min": [{"$multiply": ["$average_doctor_load", 100]}, 100]
                 },
             }
         },

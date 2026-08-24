@@ -52,12 +52,51 @@ async def list_patients(
 
     total = await count_documents(db["patients"], query)
     sort = [(sort_by, 1 if sort_order == "asc" else -1)]
-    docs = await find_to_list(db["patients"], query, sort=sort, limit=limit)
+    skip = (page - 1) * limit
+    docs = await find_to_list(db["patients"], query, sort=sort, skip=skip, limit=limit)
+
+    patient_ids = [d.get("id", "") for d in docs if d.get("id")]
+
+    # Bulk aggregate patient stats for all page patients in 1 Mongo query
+    stats_map = {}
+    if patient_ids:
+        pipeline = [
+            {"$match": {"patient_id": {"$in": patient_ids}}},
+            {"$sort": {"appointment_day": -1}},
+            {
+                "$group": {
+                    "_id": "$patient_id",
+                    "appointments": {"$sum": 1},
+                    "no_shows": {"$sum": {"$cond": [{"$eq": ["$status", "No-show"]}, 1, 0]}},
+                    "last_appointment": {"$first": "$appointment_day"},
+                }
+            },
+        ]
+        stats_rows = await aggregate_to_list(db["appointments"], pipeline)
+        for r in stats_rows:
+            p_id = r.get("id")
+            count = r.get("appointments", 0)
+            no_shows = r.get("no_shows", 0)
+            no_show_rate = round((no_shows / count) * 100, 1) if count else 0.0
+            last_app = r.get("last_appointment")
+            if isinstance(last_app, datetime):
+                last_app = last_app.isoformat()
+            stats_map[p_id] = {
+                "appointments": count,
+                "no_show_rate": no_show_rate,
+                "last_appointment": last_app,
+                "risk_status": _risk_from_rate(no_show_rate),
+            }
 
     items = []
     for doc in docs:
         patient = patient_response_from_doc(doc)
-        stats = await _patient_stats(db, patient["id"])
+        stats = stats_map.get(patient["id"], {
+            "appointments": 0,
+            "no_show_rate": 0.0,
+            "last_appointment": None,
+            "risk_status": "LOW",
+        })
         patient.update(stats)
         items.append(patient)
 
