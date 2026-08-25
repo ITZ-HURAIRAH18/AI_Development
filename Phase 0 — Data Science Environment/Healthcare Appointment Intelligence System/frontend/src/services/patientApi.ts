@@ -10,4 +10,16 @@ export const patientApi = {
     const { data } = await api.get<{ data: Patient }>(`/api/patients/${id}`)
     return data.data
   },
+  async create(payload: Record<string, unknown>) {
+    const { data } = await api.post<{ data: Patient }>('/api/patients', payload)
+    return data.data
+  },
+  async update(id: string, payload: Record<string, unknown>) {
+    const { data } = await api.put<{ data: Patient }>(`/api/patients/${id}`, payload)
+    return data.data
+  },
+  async delete(id: string) {
+    const { data } = await api.delete<{ data: Record<string, unknown> }>(`/api/patients/${id}`)
+    return data.data
+  },
 }

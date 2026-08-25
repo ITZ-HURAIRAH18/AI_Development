@@ -14,4 +14,8 @@ export const doctorApi = {
     const { data } = await api.get<{ data: Array<Record<string, number | string>> }>('/api/analytics/doctor-workload', { params })
     return data.data
   },
+  async create(payload: Record<string, unknown>) {
+    const { data } = await api.post<{ data: Doctor }>('/api/doctors', payload)
+    return data.data
+  },
 }

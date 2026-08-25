@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { ChevronDown, ExternalLink } from 'lucide-react'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { ChevronDown, ExternalLink, Plus, RefreshCw } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { Table } from '@/components/ui/Table'
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/ui/Pagination'
 import { Drawer } from '@/components/ui/Drawer'
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { AppointmentModal } from '@/components/modals/AppointmentModal'
 import { useDebounce } from '@/hooks/useDebounce'
 import { appointmentApi } from '@/services/appointmentApi'
 import { clinicApi } from '@/services/clinicApi'
@@ -37,6 +38,8 @@ export function AppointmentsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [selected, setSelected] = useState<Appointment | null>(null)
   const [drawerLoading, setDrawerLoading] = useState(false)
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false)
+  const [statusUpdating, setStatusUpdating] = useState(false)
 
   const search = searchParams.get('search') ?? ''
   const debouncedSearch = useDebounce(search, 300)
@@ -74,8 +77,7 @@ export function AppointmentsPage() {
     setSearchParams(next, { replace: true })
   }, [rawRisk, risk, searchParams, setSearchParams])
 
-  useEffect(() => {
-    let active = true
+  const loadAppointments = useCallback(() => {
     setLoading(true)
     setError('')
     appointmentApi
@@ -91,20 +93,20 @@ export function AppointmentsPage() {
         sort_order: sortOrder,
       })
       .then((result) => {
-        if (!active) return
         setItems(result.items)
         setTotal(result.total)
       })
       .catch((err: unknown) => {
-        if (active) setError((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Unable to load appointments.')
+        setError((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Unable to load appointments.')
       })
       .finally(() => {
-        if (active) setLoading(false)
+        setLoading(false)
       })
-    return () => {
-      active = false
-    }
   }, [debouncedSearch, clinicId, doctorId, risk, status, page, sortBy, sortOrder])
+
+  useEffect(() => {
+    loadAppointments()
+  }, [loadAppointments])
 
   const openDetail = async (appointment: Appointment) => {
     setDrawerLoading(true)
@@ -116,6 +118,35 @@ export function AppointmentsPage() {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Unable to load appointment detail.')
     } finally {
       setDrawerLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!selected) return
+    setStatusUpdating(true)
+    try {
+      const updated = await appointmentApi.updateStatus(selected.id, newStatus)
+      setSelected(updated)
+      loadAppointments()
+    } catch (err: unknown) {
+      alert((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Failed to update status')
+    } finally {
+      setStatusUpdating(false)
+    }
+  }
+
+  const handlePredictManual = async () => {
+    if (!selected) return
+    setStatusUpdating(true)
+    try {
+      await appointmentApi.predict(selected.id)
+      const detail = await appointmentApi.get(selected.id)
+      setSelected(detail)
+      loadAppointments()
+    } catch (err: unknown) {
+      alert((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? 'Failed to compute prediction')
+    } finally {
+      setStatusUpdating(false)
     }
   }
 
@@ -137,10 +168,17 @@ export function AppointmentsPage() {
     [],
   )
 
+  const headerActions = (
+    <Button variant="primary" size="sm" onClick={() => setIsBookModalOpen(true)}>
+      <Plus className="h-4 w-4 mr-1 shrink-0" />
+      Book Appointment
+    </Button>
+  )
+
   if (loading) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Appointments" description="Manage and review all clinic appointments." />
+        <PageHeader title="Appointments" description="Manage and review all clinic appointments." actions={headerActions} />
         <LoadingState rows={10} />
       </div>
     )
@@ -148,7 +186,7 @@ export function AppointmentsPage() {
 
   return (
     <div>
-      <PageHeader title="Appointments" description="Manage and review all clinic appointments." />
+      <PageHeader title="Appointments" description="Manage and review all clinic appointments." actions={headerActions} />
 
       <FilterBar
         search={search}
@@ -228,17 +266,47 @@ export function AppointmentsPage() {
         ) : (
           <div className="space-y-5 font-sans">
             <section className="border border-carbon-gray-20 bg-carbon-gray-10 p-4">
-              <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-carbon-gray-100">Appointment Overview</h3>
+              <div className="flex items-center justify-between mb-2.5">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-carbon-gray-100">Appointment Overview</h3>
+                <Badge tone={STATUS_TONES[selected.status] ?? 'neutral'}>{selected.status}</Badge>
+              </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
-                <Detail label="Status" value={<Badge tone={STATUS_TONES[selected.status] ?? 'neutral'}>{selected.status}</Badge>} />
                 <Detail label="Scheduled Day" value={formatDate(selected.scheduled_day)} />
                 <Detail label="Appointment Day" value={formatDate(selected.appointment_day)} />
                 <Detail label="SMS Notification" value={selected.sms_received ? 'Received' : 'Not Sent'} />
+                <Detail label="Doctor ID" value={selected.doctor_id} />
               </dl>
+
+              {/* Status Update Quick Actions */}
+              <div className="mt-4 border-t border-carbon-gray-20 pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60 mb-2">Update Appointment Status:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Scheduled', 'Completed', 'No-show', 'Cancelled'].map((st) => (
+                    <button
+                      key={st}
+                      disabled={statusUpdating || selected.status === st}
+                      onClick={() => handleStatusChange(st)}
+                      className={`px-2.5 py-1 text-xs font-semibold uppercase tracking-wider transition-all border ${
+                        selected.status === st
+                          ? 'border-primary-500 bg-primary-500 text-white cursor-default'
+                          : 'border-carbon-gray-30 bg-surface text-carbon-gray-80 hover:bg-carbon-gray-10'
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </section>
 
             <section className="border border-carbon-gray-20 bg-surface p-4">
-              <h3 className="mb-2.5 text-xs font-bold uppercase tracking-wider text-carbon-gray-100">Model Prediction Metrics</h3>
+              <div className="flex items-center justify-between mb-2.5">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-carbon-gray-100">Model Prediction Metrics</h3>
+                <Button variant="outline" size="sm" onClick={handlePredictManual} disabled={statusUpdating}>
+                  <RefreshCw className={`h-3 w-3 mr-1 ${statusUpdating ? 'animate-spin' : ''}`} />
+                  Recalculate AI Risk
+                </Button>
+              </div>
               {selected.prediction ? (
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
                   <Detail label="No-show Probability" value={formatProbability(selected.prediction.no_show_probability)} />
@@ -294,6 +362,14 @@ export function AppointmentsPage() {
           </div>
         )}
       </Drawer>
+
+      <AppointmentModal
+        open={isBookModalOpen}
+        onClose={() => setIsBookModalOpen(false)}
+        onSuccess={loadAppointments}
+        clinics={clinics}
+        doctors={doctors}
+      />
     </div>
   )
 }

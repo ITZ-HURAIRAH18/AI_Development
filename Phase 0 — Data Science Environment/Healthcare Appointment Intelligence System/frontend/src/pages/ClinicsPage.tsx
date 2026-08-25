@@ -1,20 +1,31 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2 } from 'lucide-react'
+import { Building2, Plus } from 'lucide-react'
 import { useApi } from '@/hooks/useApi'
 import { clinicApi } from '@/services/clinicApi'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { Button } from '@/components/ui/Button'
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
 import { Card } from '@/components/ui/Card'
+import { ClinicModal } from '@/components/modals/ClinicModal'
 import { formatMinutes, formatPercent } from '@/utils/format'
 
 export function ClinicsPage() {
   const navigate = useNavigate()
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { data, loading, error, reload } = useApi(() => clinicApi.list(), [])
+
+  const headerActions = (
+    <Button variant="primary" size="sm" onClick={() => setIsModalOpen(true)}>
+      <Plus className="h-4 w-4 mr-1 shrink-0" />
+      Add Clinic
+    </Button>
+  )
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <PageHeader title="Clinics Directory & Capacity" description="Operational overview, active doctors, and average waiting time per facility." />
+      <div className="space-y-4 font-sans">
+        <PageHeader title="Clinics Directory & Capacity" description="Operational overview, active doctors, and average waiting time per facility." actions={headerActions} />
         <LoadingState rows={8} />
       </div>
     )
@@ -25,7 +36,7 @@ export function ClinicsPage() {
 
   return (
     <div className="font-sans space-y-4">
-      <PageHeader title="Clinics Directory & Capacity" description="Operational overview, active doctors, and average waiting time per facility." />
+      <PageHeader title="Clinics Directory & Capacity" description="Operational overview, active doctors, and average waiting time per facility." actions={headerActions} />
       {data.length === 0 ? (
         <EmptyState title="No clinics directory records" description="Import clinic configuration records to populate capacity analytics." />
       ) : (
@@ -65,6 +76,12 @@ export function ClinicsPage() {
           ))}
         </div>
       )}
+
+      <ClinicModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={reload}
+      />
     </div>
   )
 }

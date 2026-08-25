@@ -99,8 +99,15 @@ async def create_appointment_endpoint(
 
     appointment = Appointment(**payload.model_dump())
     result = await db["appointments"].insert_one(appointment.model_dump(exclude={"id"}))
-    appointment.id = str(result.inserted_id)
-    return success(AppointmentResponse(**appointment.model_dump()).model_dump(mode="json"))
+    inserted_id = result.inserted_id
+    doc = await db["appointments"].find_one({"_id": inserted_id})
+    if doc:
+        try:
+            await compute_and_store_prediction(db, doc)
+        except Exception:
+            pass
+    detail = await get_appointment_detail(db, str(inserted_id))
+    return success(detail or {"id": str(inserted_id), **payload.model_dump()})
 
 
 @router.put(

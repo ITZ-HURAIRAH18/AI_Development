@@ -37,4 +37,8 @@ export const appointmentApi = {
     const { data } = await api.post<{ data: Record<string, unknown> }>(`/api/appointments/${id}/predict`)
     return data.data
   },
+  async create(payload: Record<string, unknown>) {
+    const { data } = await api.post<{ data: Appointment }>('/api/appointments', payload)
+    return data.data
+  },
 }

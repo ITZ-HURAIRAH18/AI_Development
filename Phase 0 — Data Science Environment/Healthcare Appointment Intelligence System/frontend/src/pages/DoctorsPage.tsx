@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom'
-import { Stethoscope } from 'lucide-react'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import { Plus, Stethoscope } from 'lucide-react'
 import { useApi } from '@/hooks/useApi'
 import { doctorApi } from '@/services/doctorApi'
 import { clinicApi } from '@/services/clinicApi'
@@ -7,12 +7,12 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { Table } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { DoctorModal } from '@/components/modals/DoctorModal'
 import { useState } from 'react'
 import { formatMinutes, formatPercent } from '@/utils/format'
 import type { Doctor } from '@/types'
-
-import { useOutletContext } from 'react-router-dom'
 
 export function DoctorsPage() {
   const navigate = useNavigate()
@@ -20,14 +20,22 @@ export function DoctorsPage() {
   const globalClinicId = outlet?.clinicId ?? ''
   const [search, setSearch] = useState('')
   const [localClinicId, setLocalClinicId] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const activeClinicId = localClinicId || globalClinicId
   const { data, loading, error, reload } = useApi(() => doctorApi.list({ search, clinic_id: activeClinicId }), [search, activeClinicId])
   const clinics = useApi(() => clinicApi.list(), [])
 
+  const headerActions = (
+    <Button variant="primary" size="sm" onClick={() => setIsModalOpen(true)}>
+      <Plus className="h-4 w-4 mr-1 shrink-0" />
+      Add Doctor
+    </Button>
+  )
+
   if (loading) {
     return (
-      <div className="space-y-4">
-        <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." />
+      <div className="space-y-4 font-sans">
+        <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." actions={headerActions} />
         <LoadingState rows={10} />
       </div>
     )
@@ -35,7 +43,7 @@ export function DoctorsPage() {
 
   return (
     <div className="font-sans space-y-4">
-      <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." />
+      <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." actions={headerActions} />
 
       <FilterBar
         search={search}
@@ -101,6 +109,13 @@ export function DoctorsPage() {
           </Table>
         </div>
       )}
+
+      <DoctorModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={reload}
+        clinics={clinics.data ?? []}
+      />
     </div>
   )
 }

@@ -14,4 +14,8 @@ export const clinicApi = {
     const { data } = await api.get<{ data: UtilizationRow[] }>('/api/analytics/clinic-utilization', { params })
     return data.data
   },
+  async create(payload: Record<string, unknown>) {
+    const { data } = await api.post<{ data: Clinic }>('/api/clinics', payload)
+    return data.data
+  },
 }
