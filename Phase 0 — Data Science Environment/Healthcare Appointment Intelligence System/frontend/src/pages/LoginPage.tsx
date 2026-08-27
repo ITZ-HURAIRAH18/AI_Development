@@ -74,11 +74,70 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <div className="border-t border-carbon-gray-20 pt-4 text-center text-xs text-carbon-gray-60">
-            Need an operator account?{' '}
-            <Link to="/register" className="font-semibold text-primary-500 hover:text-primary-600">
-              Register Credentials
-            </Link>
+          <div className="border-t border-carbon-gray-20 pt-4 space-y-3">
+            <p className="text-xs text-center font-semibold text-carbon-gray-70 uppercase tracking-widest">Quick Demo Access</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                className="px-3 py-2 text-xs font-semibold border border-primary-500 text-primary-600 hover:bg-primary-50 transition-colors"
+                onClick={async () => {
+                  setError('')
+                  setLoading(true)
+                  try {
+                    await login('admin@gmail.com', '12345678')
+                    navigate('/')
+                  } catch (err) {
+                    setError(getErrorMessage(err))
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                className="px-3 py-2 text-xs font-semibold border border-primary-500 text-primary-600 hover:bg-primary-50 transition-colors"
+                onClick={async () => {
+                  setError('')
+                  setLoading(true)
+                  try {
+                    await login('doctor@gmail.com', '12345678')
+                    navigate('/')
+                  } catch (err) {
+                    setError(getErrorMessage(err))
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+              >
+                Doctor
+              </button>
+              <button
+                type="button"
+                className="px-3 py-2 text-xs font-semibold border border-primary-500 text-primary-600 hover:bg-primary-50 transition-colors"
+                onClick={async () => {
+                  setError('')
+                  setLoading(true)
+                  try {
+                    await login('staff@gmail.com', '12345678')
+                    navigate('/')
+                  } catch (err) {
+                    setError(getErrorMessage(err))
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+              >
+                Staff
+              </button>
+            </div>
+            <div className="text-center text-xs text-carbon-gray-60">
+              Need an operator account?{' '}
+              <Link to="/register" className="font-semibold text-primary-500 hover:text-primary-600">
+                Register Credentials
+              </Link>
+            </div>
           </div>
         </div>
       </div>
