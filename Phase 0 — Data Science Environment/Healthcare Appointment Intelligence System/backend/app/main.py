@@ -49,6 +49,11 @@ def create_app() -> FastAPI:
     origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
     if settings.frontend_url:
         origins.append(settings.frontend_url)
+    # Allow Vercel frontend domain (handles preview deployments too)
+    import os
+    vercel_url = os.environ.get("VERCEL_FRONTEND_URL", "")
+    if vercel_url and vercel_url not in origins:
+        origins.append(vercel_url)
 
     app.add_middleware(
         CORSMiddleware,

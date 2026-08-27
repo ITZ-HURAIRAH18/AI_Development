@@ -3,7 +3,7 @@ import axios, { AxiosError, AxiosInstance } from 'axios'
 const TOKEN_KEY = 'healthcare_intelligence_token'
 
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || '',
   headers: { 'Content-Type': 'application/json' },
 })
 
