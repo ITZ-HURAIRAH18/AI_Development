@@ -46,7 +46,11 @@ def create_app() -> FastAPI:
     )
 
     # CORS
-    origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://healthcare-intelligence.vercel.app",
+    ]
     if settings.frontend_url:
         origins.append(settings.frontend_url)
     # Allow Vercel frontend domain (handles preview deployments too)

@@ -3,7 +3,7 @@ import axios, { AxiosError, AxiosInstance } from 'axios'
 const TOKEN_KEY = 'healthcare_intelligence_token'
 
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '',
+  baseURL: import.meta.env.VITE_API_URL || 'https://ai-development-coral.vercel.app',
   headers: { 'Content-Type': 'application/json' },
 })
 
