@@ -1,7 +1,7 @@
 {
   "functions": {
     "index.py": {
-      "includeFiles": ["app/ml/**"]
+      "includeFiles": "app/ml/**"
     }
   },
   "rewrites": [
