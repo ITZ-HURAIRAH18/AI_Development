@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
 
     # ML model paths (relative to the backend/app directory)
-    no_show_model_path: str = "../../no_show_model.pkl"
-    waiting_time_model_path: str = "../../waiting_time_model.pkl"
+    no_show_model_path: str = "ml/no_show_model.pkl"
+    waiting_time_model_path: str = "ml/waiting_time_model.pkl"
 
 
 @lru_cache
