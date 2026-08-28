@@ -13,7 +13,7 @@ dependencies = [
 	"numpy",
 	"pandas",
 	"scikit-learn==1.8.0",
-	"xgboost==3.4.1",
+	"xgboost-cpu==3.4.1",
 	"python-jose[cryptography]==3.3.0",
 	"bcrypt==5.0.0",
 	"python-dotenv==1.0.0",
@@ -40,7 +40,7 @@ joblib = "1.5.3"
 numpy = "*"
 pandas = "*"
 scikit-learn = "1.8.0"
-xgboost = "3.4.1"
+xgboost-cpu = "3.4.1"
 python-jose = { version = "3.3.0", extras = ["cryptography"] }
 bcrypt = "5.0.0"
 python-dotenv = "1.0.0"
