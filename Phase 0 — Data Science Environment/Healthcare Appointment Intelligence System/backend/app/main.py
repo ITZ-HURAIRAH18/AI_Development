@@ -69,7 +69,7 @@ def create_app() -> FastAPI:
 
     # Routes
     app.include_router(auth.router)
-    app.include_router(users.router)
+    app.include_router(users.router)  # User management endpoints
     app.include_router(patients.router)
     app.include_router(appointments.router)
     app.include_router(doctors.router)
