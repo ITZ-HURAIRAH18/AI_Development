@@ -9,7 +9,7 @@ from fastapi.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.db.mongodb import close_database_connection, connect_to_database
-from app.routes import analytics, appointments, auth, clinics, doctors, patients, predictions
+from app.routes import analytics, appointments, auth, clinics, doctors, patients, predictions, users
 from app.services.ml_service import ml_service
 
 settings = get_settings()
@@ -69,6 +69,7 @@ def create_app() -> FastAPI:
 
     # Routes
     app.include_router(auth.router)
+    app.include_router(users.router)
     app.include_router(patients.router)
     app.include_router(appointments.router)
     app.include_router(doctors.router)

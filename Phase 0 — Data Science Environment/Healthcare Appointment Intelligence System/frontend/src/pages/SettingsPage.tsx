@@ -2,12 +2,13 @@ import { useAuth } from '@/auth/AuthContext'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { UsersList } from '@/components/UsersList'
 
 export function SettingsPage() {
   const { user } = useAuth()
 
   return (
-    <div className="max-w-3xl space-y-6 font-sans">
+    <div className="max-w-6xl space-y-6 font-sans">
       <PageHeader title="System & User Configuration" breadcrumb="System / Configuration" description="Manage platform user identity credentials and enterprise system parameters." />
 
       <Card className="border-t-4 border-t-primary-500">
@@ -35,6 +36,13 @@ export function SettingsPage() {
           </dl>
         </CardContent>
       </Card>
+
+      {/* Admin-Only: User Management Section */}
+      {user?.role === 'admin' && (
+        <div>
+          <UsersList />
+        </div>
+      )}
 
       <Card>
         <CardHeader title="Platform Infrastructure" subtitle="System architecture specification" />
