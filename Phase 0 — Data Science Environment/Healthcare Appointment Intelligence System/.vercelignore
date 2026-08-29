@@ -1,5 +1,11 @@
-# Python files
-*.py
+# Exclude only Python files in root (not backend app files)
+/prepare_data.py
+/train_model.py
+/train_waiting_model.py
+/clinic_operations.py
+/clinic_utilization.py
+/scheduling_risk.py
+
 __pycache__/
 *.egg-info/
 .venv/
@@ -17,7 +23,7 @@ SYSTEM_DOCUMENTATION.md
 # Archives
 archive.zip
 
-# Python scripts
+# Python scripts directory
 scripts/
 
 # Unnecessary frontend files
