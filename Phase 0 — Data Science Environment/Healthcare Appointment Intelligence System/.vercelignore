@@ -1,0 +1,25 @@
+# Python files
+*.py
+__pycache__/
+*.egg-info/
+.venv/
+venv/
+
+# Data files
+*.csv
+*.pkl
+
+# Documentation
+*.md
+design.md
+SYSTEM_DOCUMENTATION.md
+
+# Archives
+archive.zip
+
+# Python scripts
+scripts/
+
+# Unnecessary frontend files
+frontend/node_modules/
+frontend/.turbo/
