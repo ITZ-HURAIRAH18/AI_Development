@@ -12,10 +12,7 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": [
-          "backend/app/**",
-          "*.pkl"
-        ]
+        "includeFiles": ["backend/app/**", "*.pkl"]
       }
     }
   ],
@@ -25,11 +22,11 @@
       "dest": "api/index.py"
     },
     {
-      "src": "/assets/(.*)",
+      "src": "/assets/(.+)",
       "dest": "frontend/dist/assets/$1"
     },
     {
-      "src": "/(.*\\..*)",
+      "src": "/(.+\\..+)$",
       "dest": "frontend/dist/$1"
     },
     {
