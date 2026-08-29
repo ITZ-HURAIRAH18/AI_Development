@@ -4,10 +4,11 @@ import { Edit, Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { Table } from '@/components/ui/Table'
-import { Badge } from '@/components/ui/Badge'
+import { RiskBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/ui/Pagination'
-import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { EmptyState, ErrorState } from '@/components/ui/States'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PatientModal } from '@/components/modals/PatientModal'
 import { useDebounce } from '@/hooks/useDebounce'
 import { patientApi } from '@/services/patientApi'
@@ -96,6 +97,7 @@ export function PatientsPage() {
       <PageHeader
         title="Patient Intelligence Directory"
         description="Registered patient specifications, historical no-show profiles, and appointment records."
+        breadcrumb="Patient Intelligence / Patient Records"
         actions={headerActions}
       />
 
@@ -107,11 +109,15 @@ export function PatientsPage() {
       />
 
       {loading ? (
-        <LoadingState rows={10} />
+        <TableSkeleton rows={10} columns={8} />
       ) : error ? (
-        <ErrorState message={error} onRetry={() => updateParam('page', String(page))} />
+        <ErrorState message={error} onRetry={loadPatients} />
       ) : items.length === 0 ? (
-        <EmptyState title="No patient records found" description="Try adjusting your search terms or active clinic filter." />
+        <EmptyState
+          title="No patient records found"
+          description="There are no patient records matching the current search or clinic filter."
+          action={<Button variant="outline" size="sm" onClick={() => setSearchParams(new URLSearchParams())}>Clear filters</Button>}
+        />
       ) : (
         <div className="border border-carbon-gray-20 bg-surface shadow-card">
           <Table
@@ -127,8 +133,6 @@ export function PatientsPage() {
             ]}
           >
             {items.map((patient) => {
-              const rLevel = patient.risk_status ?? 'LOW'
-              const tone = (rLevel === 'HIGH' ? 'danger' : rLevel === 'MEDIUM' ? 'warning' : 'success') as 'danger' | 'warning' | 'success'
               return (
                 <tr key={patient.id} className="cds-table-row cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
                   <td className="px-3.5 py-2.5">
@@ -142,7 +146,7 @@ export function PatientsPage() {
                   <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-carbon-gray-100">{formatNumber(patient.appointments)}</td>
                   <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{formatPercent(patient.no_show_rate)}</td>
                   <td className="px-3.5 py-2.5 text-center">
-                    <Badge tone={tone}>{rLevel}</Badge>
+                    <RiskBadge risk={patient.risk_status ?? 'LOW'} />
                   </td>
                   <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-70">{formatDate(patient.last_appointment)}</td>
                   <td className="px-3.5 py-2.5 text-right">

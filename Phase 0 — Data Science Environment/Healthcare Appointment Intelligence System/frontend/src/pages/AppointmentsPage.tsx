@@ -4,11 +4,13 @@ import { ChevronDown, ExternalLink, Plus, RefreshCw } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { Table } from '@/components/ui/Table'
-import { Badge } from '@/components/ui/Badge'
+import { Badge, RiskBadge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/ui/Pagination'
 import { Drawer } from '@/components/ui/Drawer'
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { TableSkeleton } from '@/components/ui/Skeleton'
+import { Input } from '@/components/ui/Input'
 import { AppointmentModal } from '@/components/modals/AppointmentModal'
 import { useDebounce } from '@/hooks/useDebounce'
 import { appointmentApi } from '@/services/appointmentApi'
@@ -50,6 +52,8 @@ export function AppointmentsPage() {
   const rawRisk = searchParams.get('risk') ?? ''
   const risk = RISK_LEVELS.includes(rawRisk as (typeof RISK_LEVELS)[number]) ? rawRisk : ''
   const status = searchParams.get('status') ?? ''
+  const startDate = searchParams.get('start_date') ?? ''
+  const endDate = searchParams.get('end_date') ?? ''
   const sortBy = searchParams.get('sort_by') ?? 'appointment_day'
   const sortOrder = searchParams.get('sort_order') ?? 'desc'
 
@@ -87,6 +91,8 @@ export function AppointmentsPage() {
         doctor_id: doctorId,
         risk,
         status,
+        start_date: startDate,
+        end_date: endDate,
         page,
         limit: 20,
         sort_by: sortBy,
@@ -102,7 +108,7 @@ export function AppointmentsPage() {
       .finally(() => {
         setLoading(false)
       })
-  }, [debouncedSearch, clinicId, doctorId, risk, status, page, sortBy, sortOrder])
+  }, [debouncedSearch, clinicId, doctorId, risk, status, startDate, endDate, page, sortBy, sortOrder])
 
   useEffect(() => {
     loadAppointments()
@@ -178,15 +184,15 @@ export function AppointmentsPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <PageHeader title="Appointments" description="Manage and review all clinic appointments." actions={headerActions} />
-        <LoadingState rows={10} />
+        <PageHeader title="Appointments Schedule" description="Manage and review all clinic appointments." breadcrumb="Patient Intelligence / Appointments" actions={headerActions} />
+        <TableSkeleton rows={10} columns={8} />
       </div>
     )
   }
 
   return (
     <div>
-      <PageHeader title="Appointments" description="Manage and review all clinic appointments." actions={headerActions} />
+      <PageHeader title="Appointments Schedule" description="Manage and review all clinic appointments." breadcrumb="Patient Intelligence / Appointments" actions={headerActions} />
 
       <FilterBar
         search={search}
@@ -230,12 +236,33 @@ export function AppointmentsPage() {
         ]}
         clearable
         onClear={clearFilters}
-      />
+      >
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-40">
+            <Input
+              label="From Date"
+              type="date"
+              value={startDate}
+              onChange={(event) => updateParam('start_date', event.target.value)}
+              max={endDate || undefined}
+            />
+          </div>
+          <div className="w-40">
+            <Input
+              label="To Date"
+              type="date"
+              value={endDate}
+              onChange={(event) => updateParam('end_date', event.target.value)}
+              min={startDate || undefined}
+            />
+          </div>
+        </div>
+      </FilterBar>
 
       {error ? (
-        <ErrorState message={error} />
+        <ErrorState message={error} onRetry={loadAppointments} />
       ) : items.length === 0 ? (
-        <EmptyState title="No appointments found" description="Try adjusting your search or filters." />
+        <EmptyState title="No appointments found" description="There are no appointments matching the selected filters." action={<Button variant="outline" size="sm" onClick={clearFilters}>Clear filters</Button>} />
       ) : (
         <div className="border border-carbon-gray-20 bg-surface shadow-card">
           <Table columns={columns} onSort={(key) => updateParam('sort_by', key)} sortBy={sortBy} sortOrder={sortOrder}>
@@ -372,12 +399,6 @@ export function AppointmentsPage() {
       />
     </div>
   )
-}
-
-function RiskBadge({ risk }: { risk?: string }) {
-  if (!risk) return <span className="text-xs font-mono text-carbon-gray-50">—</span>
-  const tone = risk === 'HIGH' ? 'danger' : risk === 'MEDIUM' ? 'warning' : 'success'
-  return <Badge tone={tone as 'danger' | 'warning' | 'success'}>{risk}</Badge>
 }
 
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {

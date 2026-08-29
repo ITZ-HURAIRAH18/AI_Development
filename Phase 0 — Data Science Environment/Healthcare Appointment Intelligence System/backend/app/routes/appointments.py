@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.core.security import (
@@ -21,6 +23,20 @@ from app.services.prediction_service import compute_and_store_prediction
 from app.utils.responses import success
 
 router = APIRouter(prefix="/api/appointments", tags=["Appointments"])
+
+
+async def _resolve_patient(db, patient_ref: str) -> Optional[dict]:
+    """Resolve a patient by internal ObjectId (preferred) or patient_id code."""
+    from bson import ObjectId
+
+    doc = None
+    try:
+        doc = await db["patients"].find_one({"_id": ObjectId(patient_ref)})
+    except Exception:
+        doc = None
+    if doc is None:
+        doc = await db["patients"].find_one({"patient_id": patient_ref})
+    return doc
 
 
 @router.get(
@@ -97,7 +113,13 @@ async def create_appointment_endpoint(
     if existing:
         raise HTTPException(status_code=409, detail="An appointment with this ID already exists")
 
-    appointment = Appointment(**payload.model_dump())
+    patient_doc = await _resolve_patient(db, payload.patient_id)
+    if not patient_doc:
+        raise HTTPException(status_code=422, detail="Patient not found")
+
+    appointment_data = payload.model_dump()
+    appointment_data["patient_id"] = str(patient_doc["_id"])
+    appointment = Appointment(**appointment_data)
     result = await db["appointments"].insert_one(appointment.model_dump(exclude={"id"}))
     inserted_id = result.inserted_id
     doc = await db["appointments"].find_one({"_id": inserted_id})

@@ -25,6 +25,19 @@ def _risk_from_rate(no_show_rate: float) -> str:
     return "LOW"
 
 
+async def next_patient_id(db) -> str:
+    """Allocate the next sequential patient id (P00001, P00002, ...)."""
+    from pymongo import ReturnDocument
+
+    counter = await db["counters"].find_one_and_update(
+        {"_id": "patient_id"},
+        {"$inc": {"seq": 1}},
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+    return f"P{counter['seq']:05d}"
+
+
 async def list_patients(
     db,
     search: str = "",

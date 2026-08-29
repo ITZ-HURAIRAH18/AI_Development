@@ -4,43 +4,57 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#F4F4F4', // Carbon Gray 10
-        surface: '#FFFFFF',    // Carbon White Layer
-        'surface-hover': '#EBEBEB',
-        'carbon-gray-100': '#161616',
-        'carbon-gray-90': '#262626',
-        'carbon-gray-80': '#393939',
-        'carbon-gray-70': '#525252',
-        'carbon-gray-60': '#6F6F6F',
-        'carbon-gray-50': '#8D8D8D',
-        'carbon-gray-30': '#C6C6C6',
-        'carbon-gray-20': '#E0E0E0',
-        'carbon-gray-10': '#F4F4F4',
-        primary: {
-          50: '#EDF5FF',
-          100: '#D0E2FF',
-          200: '#A6C8FF',
-          300: '#78A9FF',
-          400: '#4589FF',
-          500: '#0F62FE', // Carbon Blue 60
-          600: '#0353E9', // Carbon Blue 70
-          700: '#002D9C', // Carbon Blue 80
-          800: '#001D6C',
-          900: '#001141',
-        },
+        background: 'var(--color-background)',
+        canvas: 'var(--color-background)',
+        surface: 'var(--color-surface)',
+        'surface-subtle': 'var(--color-surface-subtle)',
+        'surface-strong': 'var(--color-surface-strong)',
+        'surface-hover': 'var(--color-surface-hover)',
+        border: 'var(--color-border)',
+        'border-strong': 'var(--color-border-strong)',
         charcoal: {
-          DEFAULT: '#161616',
-          muted: '#525252',
+          DEFAULT: 'var(--color-text-primary)',
+          muted: 'var(--color-text-secondary)',
         },
-        border: '#E0E0E0',
-        'border-strong': '#8D8D8D',
-        success: '#198038', // Carbon Green 60
-        warning: '#F1C21B', // Carbon Yellow 30
-        danger: '#DA1E28',  // Carbon Red 60
-        info: '#4589FF',
+        'text-primary': 'var(--color-text-primary)',
+        'text-secondary': 'var(--color-text-secondary)',
+        'text-muted': 'var(--color-text-muted)',
+        'carbon-gray-100': 'var(--color-gray-100)',
+        'carbon-gray-90': 'var(--color-gray-90)',
+        'carbon-gray-80': 'var(--color-gray-80)',
+        'carbon-gray-70': 'var(--color-gray-70)',
+        'carbon-gray-60': 'var(--color-gray-60)',
+        'carbon-gray-50': 'var(--color-gray-50)',
+        'carbon-gray-30': 'var(--color-gray-30)',
+        'carbon-gray-20': 'var(--color-gray-20)',
+        'carbon-gray-10': 'var(--color-gray-10)',
+        primary: {
+          50: 'var(--color-primary-50)',
+          100: 'var(--color-primary-100)',
+          200: 'var(--color-primary-200)',
+          300: 'var(--color-primary-300)',
+          400: 'var(--color-primary-400)',
+          500: 'var(--color-primary-500)',
+          600: 'var(--color-primary-600)',
+          700: 'var(--color-primary-700)',
+          800: 'var(--color-primary-800)',
+          900: 'var(--color-primary-900)',
+        },
+        success: 'var(--color-success)',
+        warning: 'var(--color-warning)',
+        'warning-strong': 'var(--color-warning-strong)',
+        danger: 'var(--color-danger)',
+        info: 'var(--color-info)',
       },
       fontFamily: {
         sans: ['"IBM Plex Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      fontSize: {
+        display: '48px',
+        'heading-xl': '32px',
+        'heading-lg': '28px',
+        'heading-md': '20px',
+        'heading-sm': '16px',
       },
       boxShadow: {
         card: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',

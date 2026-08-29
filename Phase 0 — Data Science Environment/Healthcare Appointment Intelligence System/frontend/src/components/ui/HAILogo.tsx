@@ -66,21 +66,21 @@ export function HAILogo({
       {variant === 'primary' && (
         <div className="flex flex-col leading-none">
           <span
-            className="font-bold tracking-tight uppercase"
+            className="font-bold tracking-tight"
             style={{
               color: primaryCharcoal,
               fontSize: size === 'lg' ? '15px' : size === 'md' ? '12px' : '11px',
-              letterSpacing: '0.04em',
+              letterSpacing: '0.01em',
             }}
           >
             Healthcare Appointment
           </span>
           <span
-            className="font-semibold uppercase tracking-widest mt-0.5"
+            className="font-semibold tracking-wide mt-0.5"
             style={{
               color: accentBlue,
               fontSize: size === 'lg' ? '11px' : size === 'md' ? '10px' : '9px',
-              letterSpacing: '0.12em',
+              letterSpacing: '0.04em',
             }}
           >
             Intelligence
@@ -91,7 +91,7 @@ export function HAILogo({
       {variant === 'compact' && (
         <div className="flex items-center gap-1.5 leading-none">
           <span
-            className="font-extrabold uppercase font-mono tracking-widest"
+            className="font-extrabold font-mono tracking-widest"
             style={{
               color: primaryCharcoal,
               fontSize: size === 'lg' ? '18px' : size === 'md' ? '15px' : '12px',
@@ -101,7 +101,7 @@ export function HAILogo({
           </span>
           <span className="h-3 w-[1px] bg-carbon-gray-60 mx-0.5 opacity-50" />
           <span
-            className="font-semibold uppercase tracking-wider text-[10px] hidden sm:inline-block"
+            className="font-semibold tracking-normal text-[11px] hidden sm:inline-block"
             style={{ color: subtextColor }}
           >
             Healthcare Intelligence

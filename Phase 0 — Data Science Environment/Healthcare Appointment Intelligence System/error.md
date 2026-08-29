@@ -1,68 +1,117 @@
-Frontend url is https://healthcare-intelligence.vercel.app
-Backnc url is https://ai-development-zeta.vercel.app/
-
-
-
-
-Request URL
-https://ai-development-zeta.vercel.app/api/auth/login
-Request Method
-OPTIONS
-Status Code
-404 Not Found
-Remote Address
-64.29.17.67:443
-Referrer Policy
-strict-origin-when-cross-origin
-:authority
-ai-development-zeta.vercel.app
-:method
-OPTIONS
-:path
-/api/auth/login
-:scheme
-https
-accept
-*/*
-accept-encoding
-gzip, deflate, br, zstd
-accept-language
-en-US,en;q=0.9,ur;q=0.8,bn;q=0.7
-access-control-request-headers
-content-type
-access-control-request-method
-POST
-origin
-https://healthcare-intelligence.vercel.app
-priority
-u=1, i
-referer
-https://healthcare-intelligence.vercel.app/
-sec-fetch-dest
-empty
-sec-fetch-mode
-cors
-sec-fetch-site
-cross-site
-user-agent
-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.
-
-
-Request URL
-https://ai-development-zeta.vercel.app/api/auth/login
-Referrer Policy
-strict-origin-when-cross-origin
-accept
-application/json, text/plain, */*
-content-type
-application/json
-referer
-https://healthcare-intelligence.vercel.app/
-sec-ch-ua
-"Not=A?Brand";v="99", "Google Chrome";v="151", "Chromium";v="151"
-sec-ch-ua-mobile
-?0
-sec-ch-ua-platform
-"Windows"
-user-agent
-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36
+in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 758, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 778, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 299, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 79, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 74, in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 278, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        dependant=dependant, values=values, is_coroutine=is_coroutine
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Courses\AI_Development\Phase 0 — Data Science Environment\Healthcare Appointment Intelligence System\backend\app\routes\appointments.py", line 109, in create_appointment_endpoint
+    detail = await get_appointment_detail(db, str(inserted_id))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Courses\AI_Development\Phase 0 — Data Science Environment\Healthcare Appointment Intelligence System\backend\app\services\appointment_service.py", line 138, in get_appointment_detail
+    patient = await db["patients"].find_one({"_id": ObjectId(appointment["patient_id"])})
+                                                    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\bson\objectid.py", line 116, in __init__
+    _raise_invalid_id(oid)
+    ~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\bson\objectid.py", line 37, in _raise_invalid_id
+    raise InvalidId(
+    ...<2 lines>...
+    )
+bson.errors.InvalidId: 'P89890' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+INFO:     127.0.0.1:56298 - "POST /api/appointments HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 419, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\cors.py", line 91, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\cors.py", line 146, in simple_response
+    await self.app(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 758, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 778, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 299, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 79, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 74, in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 278, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        dependant=dependant, values=values, is_coroutine=is_coroutine
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Courses\AI_Development\Phase 0 — Data Science Environment\Healthcare Appointment Intelligence System\backend\app\routes\appointments.py", line 109, in create_appointment_endpoint
+    detail = await get_appointment_detail(db, str(inserted_id))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Courses\AI_Development\Phase 0 — Data Science Environment\Healthcare Appointment Intelligence System\backend\app\services\appointment_service.py", line 138, in get_appointment_detail
+    patient = await db["patients"].find_one({"_id": ObjectId(appointment["patient_id"])})
+                                                    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\bson\objectid.py", line 116, in __init__
+    _raise_invalid_id(oid)
+    ~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\muham\AppData\Local\Programs\Python\Python313\Lib\site-packages\bson\objectid.py", line 37, in _raise_invalid_id
+    raise InvalidId(
+    ...<2 lines>...
+    )
+bson.errors.InvalidId: 'P89890' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string

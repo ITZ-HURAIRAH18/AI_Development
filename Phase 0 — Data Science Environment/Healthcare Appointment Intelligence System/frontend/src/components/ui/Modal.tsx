@@ -26,13 +26,13 @@ export function Modal({ open, onClose, title, children, wide = false }: ModalPro
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
       <div
-        className={`relative w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} rounded-lg bg-surface shadow-lg`}
+        className={`relative w-full border border-carbon-gray-20 bg-surface shadow-carbon ${wide ? 'max-w-3xl' : 'max-w-lg'}`}
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="text-base font-semibold text-charcoal">{title}</h2>
+        <div className="flex items-center justify-between border-b border-carbon-gray-20 bg-carbon-gray-10 px-5 py-4">
+          <h2 className="text-sm font-semibold text-carbon-gray-100">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-charcoal-muted hover:bg-gray-100 hover:text-charcoal focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
+            className="rounded-none p-1 text-carbon-gray-60 hover:bg-carbon-gray-20 hover:text-carbon-gray-100 focus:outline-none"
             aria-label="Close"
           >
             <X className="h-5 w-5" />

@@ -3,7 +3,8 @@ import { Building2 } from 'lucide-react'
 import { useApi } from '@/hooks/useApi'
 import { clinicApi } from '@/services/clinicApi'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { ErrorState, LoadingState, EmptyState } from '@/components/ui/States'
+import { ErrorState, EmptyState } from '@/components/ui/States'
+import { ProfileSkeleton } from '@/components/ui/Skeleton'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Table } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
@@ -16,60 +17,64 @@ export function ClinicDetailPage() {
   const utilization = useApi(() => clinicApi.utilization({}), [])
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <LoadingState rows={8} />
-      </div>
-    )
+    return <ProfileSkeleton />
   }
   if (error || !data) {
-    return <ErrorState message={error ?? 'Clinic record not found'} onRetry={reload} />
+    return <ErrorState message={error ?? 'Clinic record could not be found'} title="Unable to load clinic record" onRetry={reload} />
   }
 
   const doctors = Array.isArray(data.doctors) ? (data.doctors as Doctor[]) : []
   const risk = data.risk_distribution ?? { LOW: 0, MEDIUM: 0, HIGH: 0 }
+  const riskTotal = risk.LOW + risk.MEDIUM + risk.HIGH
 
   return (
     <div className="space-y-6 font-sans">
       <PageHeader
-        title={`CLINIC SPECIFICATION: ${data.name.toUpperCase()}`}
+        title={`Clinic Specification: ${data.name}`}
+        breadcrumb="Operations / Clinics"
         description={`Identifier: ${data.clinic_id} · Facility Location: ${data.location}`}
         actions={
           <div className="flex items-center gap-2 text-xs font-mono font-bold text-primary-500">
             <Building2 className="h-4 w-4" aria-hidden="true" />
-            {formatPercent(data.utilization)} UTILIZATION
+            {formatPercent(data.utilization)} Utilization
           </div>
         }
       />
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-        <MiniStat label="ACTIVE DOCTORS" value={String(doctors.length)} />
-        <MiniStat label="TOTAL APPOINTMENTS" value={formatNumber(data.appointments)} />
-        <MiniStat label="AVG WAITING TIME" value={formatMinutes(data.average_waiting_time)} />
-        <MiniStat label="HISTORICAL NO-SHOW RATE" value={formatPercent(data.no_show_rate)} />
-        <MiniStat label="AVERAGE DOCTOR LOAD" value={Number(data.average_doctor_load ?? 0).toFixed(2)} />
+        <MiniStat label="Active Doctors" value={String(doctors.length)} />
+        <MiniStat label="Total Appointments" value={formatNumber(data.appointments)} />
+        <MiniStat label="Avg Waiting Time" value={formatMinutes(data.average_waiting_time)} />
+        <MiniStat label="Historical No-show Rate" value={formatPercent(data.no_show_rate)} />
+        <MiniStat label="Average Doctor Load" value={Number(data.average_doctor_load ?? 0).toFixed(2)} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="SCHEDULING RISK CLASSIFICATION DISTRIBUTION" subtitle="Diagnostic counts across appointment volume" />
+          <CardHeader title="Scheduling Risk Classification Distribution" subtitle="Diagnostic counts across appointment volume" />
           <CardContent className="p-4">
             <div className="space-y-3">
-              {(['HIGH', 'MEDIUM', 'LOW'] as const).map((level) => (
+              {([['HIGH', 'danger'], ['MEDIUM', 'warning'], ['LOW', 'success']] as const).map(([level, tone]) => (
                 <div key={level} className="flex items-center gap-3">
-                  <Badge tone={level === 'HIGH' ? 'danger' : level === 'MEDIUM' ? 'warning' : 'success'}>{level}</Badge>
+                  <Badge tone={tone}>{level}</Badge>
                   <div className="h-2 flex-1 overflow-hidden bg-carbon-gray-20 rounded-none">
-                    <div className="h-full bg-primary-500" style={{ width: `${(risk[level] ?? 0) > 0 ? 100 : 0}%` }} />
+                    <div
+                      className={`h-full ${tone === 'danger' ? 'bg-danger' : tone === 'warning' ? 'bg-warning-strong' : 'bg-success'}`}
+                      style={{ width: riskTotal > 0 ? `${((risk[level] ?? 0) / riskTotal) * 100}%` : '0%' }}
+                    />
                   </div>
                   <span className="w-16 text-right font-mono text-xs font-semibold text-carbon-gray-100">{formatNumber(risk[level] ?? 0)}</span>
                 </div>
               ))}
+              {riskTotal === 0 && (
+                <p className="text-xs text-carbon-gray-60">No risk classifications have been recorded yet.</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader title="ENTERPRISE CLINIC COMPARISON" subtitle="Capacity utilization benchmarking across facilities" />
+          <CardHeader title="Enterprise Clinic Comparison" subtitle="Capacity utilization benchmarking across facilities" />
           <CardContent className="p-0">
             <Table
               columns={[
@@ -93,7 +98,7 @@ export function ClinicDetailPage() {
       </div>
 
       <Card>
-        <CardHeader title="ASSIGNED PROVIDERS DIRECTORY" subtitle="Medical practitioners assigned to facility" />
+        <CardHeader title="Assigned Providers Directory" subtitle="Medical practitioners assigned to facility" />
         <CardContent className="p-0">
           {doctors.length === 0 ? (
             <div className="p-4">

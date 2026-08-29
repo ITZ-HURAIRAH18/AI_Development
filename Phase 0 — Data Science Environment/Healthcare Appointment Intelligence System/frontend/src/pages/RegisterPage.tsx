@@ -34,20 +34,21 @@ export function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-carbon-gray-10 px-6 py-12 font-sans">
       <div className="w-full max-w-md">
-        <div className="mb-6 flex justify-center">
-          <HAILogo variant="compact" theme="light" size="md" />
+        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <HAILogo variant="primary" theme="light" size="md" />
+          <p className="text-label text-primary-600">Secure Operations Platform</p>
         </div>
 
-        <div className="border border-carbon-gray-20 bg-surface p-8 shadow-card">
-          <h1 className="text-xl font-bold tracking-tight text-carbon-gray-100 uppercase">Account Registration</h1>
-          <p className="mt-1 text-xs text-carbon-gray-70">Register credentials for platform access.</p>
+        <div className="border border-carbon-gray-20 bg-surface px-7 py-8">
+          <h1 className="text-lg font-medium tracking-tight text-carbon-gray-100">Account Registration</h1>
+          <p className="mt-1 text-xs text-carbon-gray-70">Create credentials for platform access.</p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <Input label="Full Operator Name" required value={name} onChange={(event) => setName(event.target.value)} placeholder="Dr. Jane Doe" autoComplete="name" />
-            <Input label="Email Address" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="operator@clinic.com" autoComplete="email" />
+            <Input label="Full Name" required value={name} onChange={(event) => setName(event.target.value)} placeholder="Dr. Jane Doe" autoComplete="name" />
+            <Input label="Email Address" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@clinic.com" autoComplete="email" />
             <Input label="Password" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Minimum 8 characters" autoComplete="new-password" />
             <Select
-              label="Assigned Privilege Role"
+              label="Privilege Role"
               value={role}
               onChange={(event) => setRole(event.target.value)}
               options={[
@@ -56,13 +57,17 @@ export function RegisterPage() {
                 { value: 'admin', label: 'System Administrator' },
               ]}
             />
-            {error && <p className="text-xs font-semibold text-danger" role="alert">{error}</p>}
+            {error && (
+              <p className="border-l-4 border-danger bg-red-50 px-3 py-2 text-xs font-medium text-danger" role="alert">
+                {error}
+              </p>
+            )}
             <Button type="submit" className="w-full" size="md" loading={loading}>
-              Create Operator Account
+              Create Account
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-carbon-gray-60">
+          <p className="mt-5 border-t border-carbon-gray-20 pt-5 text-center text-xs text-carbon-gray-60">
             Already registered?{' '}
             <Link to="/login" className="font-semibold text-primary-500 hover:text-primary-600">
               Sign In

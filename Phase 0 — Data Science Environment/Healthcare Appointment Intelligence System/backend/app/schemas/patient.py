@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 
 
 class PatientCreate(BaseModel):
-    patient_id: str = Field(..., min_length=1, max_length=64)
     name: str = Field(..., min_length=1, max_length=200)
     age: int = Field(..., ge=0, le=120)
     gender: str = Field(..., pattern="^(M|F)$")

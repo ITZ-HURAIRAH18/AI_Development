@@ -4,70 +4,228 @@
 
 @layer base {
   :root {
-    --cds-background: #F4F4F4;
-    --cds-layer-01: #FFFFFF;
+    /* ---- Design Tokens: color ---- */
+    --color-background: #f4f4f4;
+    --color-canvas: #f4f4f4;
+    --color-surface: #ffffff;
+    --color-surface-subtle: #f4f4f4;
+    --color-surface-strong: #e0e0e0;
+    --color-surface-hover: #ebebeb;
+
+    --color-border: #e0e0e0;
+    --color-border-strong: #8d8d8d;
+
+    --color-text-primary: #161616;
+    --color-text-secondary: #525252;
+    --color-text-muted: #6f6f6f;
+
+    --color-primary: #0f62fe;
+    --color-primary-hover: #0353e9;
+    --color-primary-active: #002d9c;
+
+    --color-primary-50: #edf5ff;
+    --color-primary-100: #d0e2ff;
+    --color-primary-200: #a6c8ff;
+    --color-primary-300: #78a9ff;
+    --color-primary-400: #4589ff;
+    --color-primary-500: #0f62fe;
+    --color-primary-600: #0353e9;
+    --color-primary-700: #002d9c;
+    --color-primary-800: #001d6c;
+    --color-primary-900: #001141;
+
+    --color-gray-10: #f4f4f4;
+    --color-gray-20: #e0e0e0;
+    --color-gray-30: #c6c6c6;
+    --color-gray-50: #8d8d8d;
+    --color-gray-60: #6f6f6f;
+    --color-gray-70: #525252;
+    --color-gray-80: #393939;
+    --color-gray-90: #262626;
+    --color-gray-100: #161616;
+
+    --color-success: #198038;
+    --color-success-subtle: #defbe6;
+    --color-warning: #f1c21b;
+    --color-warning-strong: #684e00;
+    --color-warning-subtle: #fcf4d6;
+    --color-danger: #da1e28;
+    --color-danger-subtle: #fff1f1;
+    --color-info: #0f62fe;
+    --color-info-subtle: #edf5ff;
+
+    /* ---- Design Tokens: geometry ---- */
+    --radius-none: 0px;
+    --radius-small: 2px;
+
+    /* ---- Design Tokens: 4px spacing grid ---- */
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-3: 12px;
+    --spacing-4: 16px;
+    --spacing-5: 24px;
+    --spacing-6: 32px;
+    --spacing-7: 48px;
+    --spacing-8: 64px;
+    --spacing-10: 96px;
+
+    /* ---- Legacy Carbon aliases (kept for compatibility) ---- */
+    --cds-background: #f4f4f4;
+    --cds-layer-01: #ffffff;
     --cds-text-01: #161616;
     --cds-text-02: #525252;
-    --cds-text-03: #6F6F6F;
-    --cds-border-subtle: #E0E0E0;
-    --cds-border-strong: #8D8D8D;
-    --cds-interactive-01: #0F62FE;
-    --cds-hover-primary: #0353E9;
-    --cds-active-primary: #002D9C;
-    --cds-support-01: #DA1E28;
+    --cds-text-03: #6f6f6f;
+    --cds-border-subtle: #e0e0e0;
+    --cds-border-strong: #8d8d8d;
+    --cds-interactive-01: #0f62fe;
+    --cds-hover-primary: #0353e9;
+    --cds-active-primary: #002d9c;
+    --cds-support-01: #da1e28;
     --cds-support-02: #198038;
-    --cds-support-03: #F1C21B;
-    --cds-support-04: #4589FF;
+    --cds-support-03: #f1c21b;
+    --cds-support-04: #4589ff;
   }
 
   html {
     @apply antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
   body {
-    background-color: var(--cds-background);
-    color: var(--cds-text-01);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
     font-family: 'IBM Plex Sans', Inter, system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
   }
+
   ::selection {
-    background-color: #D0E2FF;
-    color: #002D9C;
+    background-color: var(--color-primary-100);
+    color: var(--color-primary-700);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
   }
 }
 
-/* Carbon Table Utilities */
-.cds-table-header {
-  background-color: #F4F4F4;
-  border-bottom: 1px solid #E0E0E0;
-  color: #525252;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+/* ============================================================
+   Typography token utilities
+   ============================================================ */
+@layer components {
+  .text-display {
+    font-size: 48px;
+    line-height: 1.25;
+    font-weight: 300;
+    letter-spacing: -0.025em;
+  }
+  .text-heading-xl {
+    font-size: 32px;
+    line-height: 1.25;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .text-heading-lg {
+    font-size: 28px;
+    line-height: 1.3;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .text-heading-md {
+    font-size: 20px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .text-heading-sm {
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .text-body {
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+  .text-body-sm {
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+  .text-caption {
+    font-size: 11px;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+  .text-label {
+    font-size: 11px;
+    line-height: 1.5;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .text-button {
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+
+  /* Carbon-style table header */
+  .cds-table-header {
+    background-color: var(--color-surface-subtle);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .cds-table-row {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 150ms ease;
+  }
+  .cds-table-row:hover {
+    background-color: var(--color-surface-hover);
+  }
+
+  /* Enterprise panel */
+  .cds-tile {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
 }
 
-.cds-table-row {
-  border-bottom: 1px solid #E0E0E0;
-  transition: background-color 150ms ease;
+/* ============================================================
+   Loading skeleton (subtle shimmer)
+   ============================================================ */
+.skeleton {
+  @apply relative overflow-hidden;
+  background-color: var(--color-surface-strong);
 }
-.cds-table-row:hover {
-  background-color: #F4F4F4;
+.skeleton::after {
+  content: '';
+  @apply absolute inset-0 -translate-x-full;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton-static::after {
+  animation: none;
 }
 
-/* Carbon Panel Card */
-.cds-tile {
-  background-color: #FFFFFF;
-  border: 1px solid #E0E0E0;
-  border-top: 3px solid #0F62FE;
-}
-
-/* Header dark dropdown contrast */
-header select option {
-  background-color: #262626 !important;
-  color: #FFFFFF !important;
-}
-
-/* Custom Sleek Enterprise Scrollbar */
+/* ============================================================
+   Scrollbar
+   ============================================================ */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -76,30 +234,14 @@ header select option {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #C6C6C6;
+  background: var(--color-gray-30);
   border-radius: 0px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #8D8D8D;
+  background: var(--color-gray-50);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #C6C6C6 transparent;
-}
-
-/* Skeleton shimmer */
-.skeleton {
-  @apply relative overflow-hidden bg-gray-200/80;
-}
-.skeleton::after {
-  content: '';
-  @apply absolute inset-0 -translate-x-full;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-  animation: shimmer 1.4s infinite;
-}
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+  scrollbar-color: var(--color-gray-30) transparent;
 }

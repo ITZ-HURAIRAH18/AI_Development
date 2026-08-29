@@ -8,10 +8,10 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-3xl space-y-6 font-sans">
-      <PageHeader title="System & User Configuration" description="Manage platform user identity credentials and enterprise system parameters." />
+      <PageHeader title="System & User Configuration" breadcrumb="System / Configuration" description="Manage platform user identity credentials and enterprise system parameters." />
 
       <Card className="border-t-4 border-t-primary-500">
-        <CardHeader title="USER ACCOUNT SPECIFICATION" subtitle="Authenticated user profile credentials" />
+        <CardHeader title="User Account Specification" subtitle="Authenticated user profile credentials" />
         <CardContent className="space-y-4 p-4">
           <div className="flex items-center gap-4 border-b border-carbon-gray-20 pb-4">
             <div className="flex h-10 w-10 items-center justify-center bg-carbon-gray-90 text-white font-mono font-bold text-sm">
@@ -21,7 +21,7 @@ export function SettingsPage() {
               <p className="font-bold text-sm text-carbon-gray-100">{user?.name}</p>
               <p className="text-xs font-mono text-carbon-gray-60">{user?.email}</p>
             </div>
-            <Badge tone="primary">{user?.role?.toUpperCase()}</Badge>
+            <Badge tone="primary">{user?.role}</Badge>
           </div>
           <dl className="grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
             <div>
@@ -30,26 +30,26 @@ export function SettingsPage() {
             </div>
             <div>
               <dt className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">Assigned Privilege Role</dt>
-              <dd className="mt-0.5 uppercase font-semibold text-carbon-gray-100">{user?.role}</dd>
+              <dd className="mt-0.5 font-semibold text-carbon-gray-100">{user?.role}</dd>
             </div>
           </dl>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader title="PLATFORM INFRASTRUCTURE" subtitle="System architecture specification" />
+        <CardHeader title="Platform Infrastructure" subtitle="System architecture specification" />
         <CardContent className="p-4 space-y-3 text-xs">
           <div className="flex items-center justify-between border-b border-carbon-gray-20 pb-2">
             <span className="font-bold uppercase tracking-wider text-carbon-gray-60">Design Framework</span>
-            <span className="font-mono font-bold text-primary-500">IBM Carbon Enterprise Standard</span>
+            <span className="font-mono font-bold text-primary-500">Carbon-inspired Enterprise Standard</span>
           </div>
           <div className="flex items-center justify-between border-b border-carbon-gray-20 pb-2">
             <span className="font-bold uppercase tracking-wider text-carbon-gray-60">ML Prediction Engine</span>
-            <span className="font-mono text-carbon-gray-100">Scikit-Learn / XGBoost Inference</span>
+            <span className="font-mono text-carbon-gray-100">Gradient Boosting / Random Forest Inference</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-bold uppercase tracking-wider text-carbon-gray-60">Data Persistence Layer</span>
-            <span className="font-mono text-carbon-gray-100">MongoDB BSON Indexing Engine</span>
+            <span className="font-mono text-carbon-gray-100">MongoDB Document Store</span>
           </div>
         </CardContent>
       </Card>

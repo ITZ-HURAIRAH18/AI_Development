@@ -11,7 +11,6 @@ import {
   Stethoscope,
   Building2,
   Clock,
-  Sparkles,
   Filter,
 } from 'lucide-react'
 import { useApi } from '@/hooks/useApi'
@@ -22,7 +21,8 @@ import { ChartCard } from '@/components/ui/ChartCard'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Table } from '@/components/ui/Table'
-import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { EmptyState, ErrorState } from '@/components/ui/States'
+import { PageSkeleton } from '@/components/ui/Skeleton'
 import { formatMinutes, formatProbability, formatNumber } from '@/utils/format'
 import { RISK_COLORS } from '@/utils/risk'
 
@@ -85,15 +85,11 @@ export function SchedulingRiskPage() {
   }, [highRisk, searchQuery, selectedFactor])
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <LoadingState rows={8} />
-      </div>
-    )
+    return <PageSkeleton cards={4} charts={1} tableRows={6} />
   }
 
   if (error || !data) {
-    return <ErrorState message={error ?? 'Unable to load scheduling risk analytics'} onRetry={reload} />
+    return <ErrorState message={error ?? 'Unable to load scheduling risk analytics'} title="Unable to load scheduling risk data" onRetry={reload} />
   }
 
   const chartData = distribution.map((item) => ({
@@ -106,6 +102,7 @@ export function SchedulingRiskPage() {
     <div className="space-y-6 font-sans">
       <PageHeader
         title="Scheduling Risk Intelligence"
+        breadcrumb="Operations / Scheduling Risk"
         description="High-risk appointment flags, risk factor distribution, and capacity diagnostic tracking."
         actions={
           <button
@@ -332,8 +329,7 @@ export function SchedulingRiskPage() {
                         </td>
 
                         <td className="px-3.5 py-2.5 text-center">
-                          <span className="inline-flex items-center justify-center bg-red-50 px-2 py-0.5 font-mono text-xs font-bold text-danger border border-red-200">
-                            <Sparkles className="mr-1 h-3 w-3" />
+                          <span className="inline-flex items-center justify-center border border-red-200 bg-red-50 px-2 py-0.5 font-mono text-xs font-bold text-danger">
                             {item.risk_score}
                           </span>
                         </td>

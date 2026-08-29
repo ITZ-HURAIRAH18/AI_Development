@@ -18,7 +18,6 @@ export function PatientModal({ open, onClose, onSuccess, patient }: PatientModal
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const [patientId, setPatientId] = useState('')
   const [name, setName] = useState('')
   const [age, setAge] = useState(35)
   const [gender, setGender] = useState('F')
@@ -26,13 +25,11 @@ export function PatientModal({ open, onClose, onSuccess, patient }: PatientModal
 
   useEffect(() => {
     if (patient) {
-      setPatientId(patient.patient_id || '')
       setName(patient.name || '')
       setAge(patient.age || 35)
       setGender(patient.gender || 'F')
       setNeighbourhood(patient.neighbourhood || '')
     } else {
-      setPatientId(`P${Math.floor(10000 + Math.random() * 90000)}`)
       setName('')
       setAge(35)
       setGender('F')
@@ -59,7 +56,6 @@ export function PatientModal({ open, onClose, onSuccess, patient }: PatientModal
         })
       } else {
         await patientApi.create({
-          patient_id: patientId.trim(),
           name: name.trim(),
           age: Number(age),
           gender,
@@ -89,13 +85,10 @@ export function PatientModal({ open, onClose, onSuccess, patient }: PatientModal
 
         <div className="space-y-3">
           {!isEdit && (
-            <Input
-              label="Patient ID Code"
-              value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              placeholder="e.g. P10050"
-              required
-            />
+            <div className="rounded-none border border-carbon-gray-20 bg-carbon-gray-10 px-3 py-2.5 text-xs text-carbon-gray-70">
+              <span className="font-semibold text-carbon-gray-100">Patient ID:</span> auto-assigned in sequence by the system on
+              registration (e.g., P00001, P00002).
+            </div>
           )}
 
           <Input

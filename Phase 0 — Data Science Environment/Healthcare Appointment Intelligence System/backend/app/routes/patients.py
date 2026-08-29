@@ -10,6 +10,7 @@ from app.schemas.patient import PatientCreate, PatientResponse, PatientUpdate
 from app.services.patient_service import (
     get_patient_detail,
     list_patients,
+    next_patient_id,
     patient_response_from_doc,
 )
 from app.utils.responses import success
@@ -69,7 +70,9 @@ async def create_patient_endpoint(
         raise HTTPException(status_code=503, detail="Database is not available")
     from app.models.patient import Patient
 
-    patient = Patient(**payload.model_dump())
+    payload = payload.model_dump()
+    payload["patient_id"] = await next_patient_id(db)
+    patient = Patient(**payload)
     result = await db["patients"].insert_one(patient.model_dump(exclude={"id"}))
     patient.id = str(result.inserted_id)
     return success(PatientResponse(**patient.model_dump()).model_dump(mode="json"))

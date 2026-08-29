@@ -3,12 +3,12 @@ import { UserRound } from 'lucide-react'
 import { useApi } from '@/hooks/useApi'
 import { patientApi } from '@/services/patientApi'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { ErrorState, LoadingState, EmptyState } from '@/components/ui/States'
+import { ErrorState, EmptyState } from '@/components/ui/States'
+import { ProfileSkeleton } from '@/components/ui/Skeleton'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { Badge, RiskBadge } from '@/components/ui/Badge'
 import { Table } from '@/components/ui/Table'
 import { formatDate, formatNumber, formatPercent } from '@/utils/format'
-import { getRiskStyle } from '@/utils/risk'
 import type { Appointment } from '@/types'
 
 const STATUS_TONES: Record<string, 'neutral' | 'success' | 'warning' | 'danger' | 'primary'> = {
@@ -23,30 +23,27 @@ export function PatientDetailPage() {
   const { data, loading, error, reload } = useApi(() => patientApi.get(id ?? ''), [id])
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <LoadingState rows={8} />
-      </div>
-    )
+    return <ProfileSkeleton />
   }
 
   if (error || !data) {
-    return <ErrorState message={error ?? 'Patient profile not found'} onRetry={reload} />
+    return <ErrorState message={error ?? 'Patient profile could not be found'} title="Unable to load patient profile" onRetry={reload} />
   }
 
-  const riskStyle = getRiskStyle(data.risk_status ?? 'LOW')
+  const riskStatus = data.risk_status ?? 'LOW'
 
   return (
     <div className="space-y-6 font-sans">
       <PageHeader
-        title={`PATIENT PROFILE: ${data.name.toUpperCase()}`}
+        title={`Patient Profile: ${data.name}`}
+        breadcrumb="Patient Intelligence / Patient Records"
         description={`Identifier: ${data.patient_id} · Gender: ${data.gender}`}
-        actions={
-          <Badge tone={riskStyle.dot === 'bg-danger' ? 'danger' : riskStyle.dot === 'bg-warning' ? 'warning' : 'success'}>
-            {riskStyle.label}
-          </Badge>
-        }
+        actions={<RiskBadge risk={riskStatus} />}
       />
+      <div className="flex items-center gap-2 border-b border-carbon-gray-20 pb-4 text-xs text-carbon-gray-70">
+        <UserRound className="h-4 w-4 text-carbon-gray-50" aria-hidden="true" />
+        <span>Predictive risk rating derived from historical no-show behaviour.</span>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard title="AGE" value={String(data.age)} />

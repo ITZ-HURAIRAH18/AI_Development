@@ -135,7 +135,11 @@ async def get_appointment_detail(db, appointment_object_id: str) -> Optional[dic
 
     appointment = appointment_response_from_doc(serialize_doc(doc))
 
-    patient = await db["patients"].find_one({"_id": ObjectId(appointment["patient_id"])})
+    patient = None
+    try:
+        patient = await db["patients"].find_one({"_id": ObjectId(appointment["patient_id"])})
+    except Exception:
+        patient = None
     doctor = await db["doctors"].find_one({"doctor_id": appointment["doctor_id"]})
     clinic = await db["clinics"].find_one({"clinic_id": appointment["clinic_id"]})
     prediction = await db["predictions"].find_one({"appointment_id": appointment["id"]})

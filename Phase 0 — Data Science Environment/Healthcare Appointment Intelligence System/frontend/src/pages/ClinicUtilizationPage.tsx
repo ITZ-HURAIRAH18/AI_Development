@@ -1,4 +1,5 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useOutletContext } from 'react-router-dom'
 import { useApi } from '@/hooks/useApi'
 import { clinicApi } from '@/services/clinicApi'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -6,7 +7,10 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { ChartCard } from '@/components/ui/ChartCard'
 import { Table } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
-import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { EmptyState, ErrorState } from '@/components/ui/States'
+import { PageSkeleton } from '@/components/ui/Skeleton'
+import { StatCard } from '@/components/ui/StatCard'
+import { AlertTriangle, Building2, Gauge, Timer } from 'lucide-react'
 import { formatMinutes, formatNumber, formatPercent } from '@/utils/format'
 import type { UtilizationRow } from '@/types'
 
@@ -16,42 +20,62 @@ function utilizationTone(value: number) {
   return 'success'
 }
 
-import { useOutletContext } from 'react-router-dom'
-
 export function ClinicUtilizationPage() {
   const outlet = useOutletContext<{ clinicId?: string }>()
   const clinicId = outlet?.clinicId ?? ''
   const { data, loading, error, reload } = useApi(() => clinicApi.utilization({ clinic_id: clinicId }), [clinicId], `clinic-utilization-${clinicId}`)
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <LoadingState rows={8} />
-      </div>
-    )
+    return <PageSkeleton cards={4} charts={1} tableRows={6} />
   }
   if (error || !data) {
-    return <ErrorState message={error ?? 'Unable to load clinic capacity utilization analytics'} onRetry={reload} />
+    return <ErrorState message={error ?? 'Unable to load clinic capacity utilization analytics'} title="Unable to load clinic utilization data" onRetry={reload} />
   }
 
   const rows = data as UtilizationRow[]
   const avgUtilization = rows.length ? rows.reduce((sum, row) => sum + row.utilization_percentage, 0) / rows.length : 0
+  const totalPatients = rows.reduce((sum, r) => sum + (r.patient_volume ?? 0), 0)
+  const atCapacity = rows.filter((r) => r.utilization_percentage >= 100).length
 
   return (
     <div className="space-y-6 font-sans">
       <PageHeader
-        title="Clinic Utilization & Capacity Intelligence"
-        description={`Capacity benchmarks across ${rows.length} facilities. Enterprise average: ${formatPercent(avgUtilization)}`}
+title="Clinic Utilization"
+        breadcrumb="Operations / Clinic Utilization"
+        description={`Capacity benchmarks across ${rows.length} facilities. Enterprise average utilization is ${formatPercent(avgUtilization)}.`}
       />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MiniStat label="ACTIVE CLINICS" value={String(rows.length)} />
-        <MiniStat label="TOTAL PATIENTS SERVED" value={formatNumber(rows.reduce((sum, r) => sum + (r.patient_volume ?? 0), 0))} />
-        <MiniStat label="AVG CAPACITY UTILIZATION" value={formatPercent(avgUtilization)} />
-        <MiniStat label="AVERAGE SYSTEM WAIT" value={formatMinutes(rows.length ? rows.reduce((sum, r) => sum + (r.average_waiting_time ?? 0), 0) / rows.length : 0)} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Average Utilization" value={formatPercent(avgUtilization)} subtitle="Capacity average" icon={Gauge} tone="info" />
+        <StatCard
+          title="Highest Utilization"
+          value={formatPercent(Math.max(0, ...rows.map((r) => r.utilization_percentage)))}
+          subtitle="Clinic at peak capacity"
+          icon={Building2}
+          tone={avgUtilization >= 80 ? 'danger' : avgUtilization >= 50 ? 'warning' : 'success'}
+        />
+        <StatCard
+          title="Lowest Utilization"
+          value={formatPercent(Math.min(...rows.map((r) => r.utilization_percentage)))}
+          subtitle="Clinic at lowest capacity"
+          icon={Building2}
+          tone="neutral"
+        />
+        <StatCard title="Total Clinics" value={formatNumber(rows.length)} subtitle={`${formatNumber(totalPatients)} patients served`} icon={Timer} tone="neutral" />
       </div>
 
-      <ChartCard title="FACILITY CAPACITY UTILIZATION BENCHMARK" subtitle="Percentage utilization by clinic ID (doctor load ratio × 100)">
+      {atCapacity > 0 && (
+        <div className="flex items-start gap-3 border border-amber-200 border-l-4 border-l-warning bg-amber-50 px-4 py-3 text-xs text-amber-900">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" aria-hidden="true" />
+          <p>
+            <span className="font-semibold">Capacity review flag:</span> {atCapacity} clinic(s) reported utilization at or above 100%.
+            Utilization is derived from average doctor load and is capped at 100%. Values at this bound may indicate over-capacity and
+            should be reviewed operationally.
+          </p>
+        </div>
+      )}
+
+      <ChartCard title="Clinic Utilization" subtitle="Percentage capacity utilization by clinic" xLabel="Clinic" yLabel="Utilization (%)">
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={rows.map((row) => ({ name: row.clinic_id, utilization: row.utilization_percentage }))}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
@@ -71,11 +95,11 @@ export function ClinicUtilizationPage() {
             <Table
               columns={[
                 { key: 'clinic_id', label: 'Clinic ID' },
-                { key: 'doctors', label: 'Active Doctors', align: 'right' as const },
-                { key: 'patients', label: 'Patient Volume', align: 'right' as const },
+                { key: 'doctors', label: 'Doctors', align: 'right' as const },
+                { key: 'patients', label: 'Patients', align: 'right' as const },
                 { key: 'wait', label: 'Average Waiting Time', align: 'right' as const },
-                { key: 'load', label: 'Doctor Workload Load', align: 'right' as const },
-                { key: 'utilization', label: 'Capacity Utilization', align: 'right' as const },
+                { key: 'load', label: 'Doctor Workload', align: 'right' as const },
+                { key: 'utilization', label: 'Utilization', align: 'right' as const },
               ]}
             >
               {rows.map((row) => (
@@ -86,7 +110,7 @@ export function ClinicUtilizationPage() {
                   <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{formatMinutes(row.average_waiting_time)}</td>
                   <td className="px-3.5 py-2.5 text-right font-mono text-carbon-gray-100">{Number(row.average_doctor_load ?? 0).toFixed(2)}</td>
                   <td className="px-3.5 py-2.5 text-right">
-                    <Badge tone={utilizationTone(row.utilization_percentage ?? 0) as 'danger' | 'warning' | 'success'}>
+                    <Badge tone={utilizationTone(row.utilization_percentage ?? 0) as 'danger' | 'warning' | 'success'} dot>
                       {formatPercent(row.utilization_percentage)}
                     </Badge>
                   </td>
@@ -97,14 +121,5 @@ export function ClinicUtilizationPage() {
         </Card>
       )}
     </div>
-  )
-}
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="p-4 border-t-2 border-t-primary-500">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-carbon-gray-60">{label}</p>
-      <p className="mt-1 text-xl font-bold tracking-tight font-mono text-carbon-gray-100">{value}</p>
-    </Card>
   )
 }

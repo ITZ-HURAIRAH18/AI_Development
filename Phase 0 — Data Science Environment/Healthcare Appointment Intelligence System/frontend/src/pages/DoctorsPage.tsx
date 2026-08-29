@@ -1,5 +1,7 @@
 import { useNavigate, useOutletContext } from 'react-router-dom'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Plus, Stethoscope } from 'lucide-react'
+import { useState } from 'react'
 import { useApi } from '@/hooks/useApi'
 import { doctorApi } from '@/services/doctorApi'
 import { clinicApi } from '@/services/clinicApi'
@@ -8,11 +10,25 @@ import { FilterBar } from '@/components/ui/FilterBar'
 import { Table } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { EmptyState, ErrorState, LoadingState } from '@/components/ui/States'
+import { EmptyState, ErrorState } from '@/components/ui/States'
+import { PageSkeleton } from '@/components/ui/Skeleton'
+import { ChartCard } from '@/components/ui/ChartCard'
+import { StatCard } from '@/components/ui/StatCard'
 import { DoctorModal } from '@/components/modals/DoctorModal'
-import { useState } from 'react'
 import { formatMinutes, formatPercent } from '@/utils/format'
 import type { Doctor } from '@/types'
+
+function tooltipStyles() {
+  return {
+    contentStyle: {
+      borderRadius: 0,
+      border: '1px solid #E0E0E0',
+      fontSize: 11,
+      fontFamily: 'IBM Plex Sans, sans-serif',
+      background: '#FFFFFF',
+    },
+  }
+}
 
 export function DoctorsPage() {
   const navigate = useNavigate()
@@ -23,6 +39,7 @@ export function DoctorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const activeClinicId = localClinicId || globalClinicId
   const { data, loading, error, reload } = useApi(() => doctorApi.list({ search, clinic_id: activeClinicId }), [search, activeClinicId])
+  const workload = useApi(() => doctorApi.workload({ clinic_id: activeClinicId }), [activeClinicId], `doctor-workload-${activeClinicId}`)
   const clinics = useApi(() => clinicApi.list(), [])
 
   const headerActions = (
@@ -35,26 +52,40 @@ export function DoctorsPage() {
   if (loading) {
     return (
       <div className="space-y-4 font-sans">
-        <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." actions={headerActions} />
-        <LoadingState rows={10} />
+        <PageHeader title="Doctor Workload" breadcrumb="Operations / Doctor Workload" description="Provider workload ratios, average waiting times, and capacity utilization." actions={headerActions} />
+        <PageSkeleton cards={4} charts={1} tableRows={6} />
       </div>
     )
   }
 
+  const workloadRows = (workload.data ?? []) as Array<{
+    doctor_id: string
+    appointments?: number
+    doctor_load?: number
+    average_waiting_time?: number
+    no_show_rate?: number
+    utilization?: number
+  }>
+  const avgLoad = workloadRows.length
+    ? workloadRows.reduce((sum, r) => sum + (r.doctor_load ?? 0), 0) / workloadRows.length
+    : 0
+  const maxLoad = workloadRows.length ? Math.max(...workloadRows.map((r) => r.doctor_load ?? 0)) : 0
+  const activeAppointments = workloadRows.reduce((sum, r) => sum + (r.appointments ?? 0), 0)
+
   return (
-    <div className="font-sans space-y-4">
-      <PageHeader title="Doctor Performance Analytics" description="Provider workload ratios, average waiting times, and capacity utilization." actions={headerActions} />
+    <div className="space-y-4 font-sans">
+      <PageHeader title="Doctor Workload" breadcrumb="Operations / Doctor Workload" description="Provider workload ratios, average waiting times, and capacity utilization." actions={headerActions} />
 
       <FilterBar
         search={search}
         onSearchChange={setSearch}
         filters={[
           {
-            label: 'Clinic Filter',
+            label: 'Clinic',
             value: activeClinicId,
             onChange: setLocalClinicId,
             options: [
-              { value: '', label: 'All Clinics Overview' },
+              { value: '', label: 'All Clinics' },
               ...(clinics.data ?? []).map((c) => ({ value: c.clinic_id, label: `${c.clinic_id} — ${c.name}` })),
             ],
           },
@@ -66,6 +97,31 @@ export function DoctorsPage() {
         }}
       />
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Average Load" value={avgLoad.toFixed(2)} subtitle="Average active load" icon={Stethoscope} tone="info" />
+        <StatCard title="Highest Load" value={maxLoad.toFixed(2)} subtitle="Peak provider load" icon={Stethoscope} tone={maxLoad >= 0.8 ? 'danger' : maxLoad >= 0.6 ? 'warning' : 'success'} />
+        <StatCard title="Active Appointments" value={activeAppointments.toLocaleString('en-US')} subtitle="Appointments across providers" icon={Stethoscope} tone="neutral" />
+        <StatCard title="Doctors" value={String(workloadRows.length || (data?.length ?? 0))} subtitle="Providers tracked" icon={Stethoscope} tone="neutral" />
+      </div>
+
+      <ChartCard title="Doctor Workload" subtitle="Active appointments per provider" xLabel="Doctor" yLabel="Active Appointments">
+        {!workload.loading && workload.error ? (
+          <EmptyState title="Workload chart unavailable" description="The workload distribution could not be loaded." />
+        ) : workloadRows.length === 0 ? (
+          <EmptyState title="No workload data" description="Doctor workload metrics will appear once appointments are recorded." />
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={workloadRows.slice(0, 15).map((row) => ({ name: row.doctor_id, appointments: row.appointments ?? 0 }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E0E0E0" vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#525252' }} tickLine={false} axisLine={false} width={45} />
+              <Tooltip {...tooltipStyles()} />
+              <Bar dataKey="appointments" name="Appointments" fill="#525252" radius={0} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </ChartCard>
+
       {error ? (
         <ErrorState message={error} onRetry={reload} />
       ) : !data || data.length === 0 ? (
@@ -74,14 +130,14 @@ export function DoctorsPage() {
         <div className="border border-carbon-gray-20 bg-surface shadow-card">
           <Table
             columns={[
-              { key: 'doctor_id', label: 'Doctor Specification' },
-              { key: 'specialization', label: 'Medical Specialization' },
-              { key: 'clinic_id', label: 'Assigned Clinic' },
-              { key: 'appointments', label: 'Total Appointments', align: 'right' as const },
+              { key: 'doctor_id', label: 'Doctor' },
+              { key: 'specialization', label: 'Specialization' },
+              { key: 'clinic_id', label: 'Clinic' },
+              { key: 'appointments', label: 'Appointments', align: 'right' as const },
               { key: 'average_waiting_time', label: 'Avg Waiting', align: 'right' as const },
-              { key: 'doctor_load', label: 'Workload Ratio', align: 'right' as const },
+              { key: 'doctor_load', label: 'Workload', align: 'right' as const },
               { key: 'no_show_rate', label: 'No-show Rate', align: 'right' as const },
-              { key: 'utilization', label: 'Capacity Utilization', align: 'right' as const },
+              { key: 'utilization', label: 'Utilization', align: 'right' as const },
             ]}
           >
             {data.map((doctor: Doctor) => (
@@ -113,7 +169,7 @@ export function DoctorsPage() {
       <DoctorModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={reload}
+        onSuccess={() => { reload(); workload.reload() }}
         clinics={clinics.data ?? []}
       />
     </div>

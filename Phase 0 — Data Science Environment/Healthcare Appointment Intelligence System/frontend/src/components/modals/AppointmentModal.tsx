@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { appointmentApi } from '@/services/appointmentApi'
-import type { Clinic, Doctor } from '@/types'
+import { patientApi } from '@/services/patientApi'
+import type { Clinic, Doctor, Patient } from '@/types'
 
 interface AppointmentModalProps {
   open: boolean
@@ -22,7 +23,12 @@ export function AppointmentModal({ open, onClose, onSuccess, clinics, doctors }:
   const defaultAppId = `APP-${Math.floor(100000 + Math.random() * 900000)}`
 
   const [appointmentId, setAppointmentId] = useState(defaultAppId)
-  const [patientId, setPatientId] = useState('')
+  const [patientQuery, setPatientQuery] = useState('')
+  const [patientResults, setPatientResults] = useState<Patient[]>([])
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+  const [patientSearching, setPatientSearching] = useState(false)
+  const [showPatientResults, setShowPatientResults] = useState(false)
+  const patientBoxRef = useRef<HTMLDivElement>(null)
   const [doctorId, setDoctorId] = useState(doctors[0]?.doctor_id || '')
   const [clinicId, setClinicId] = useState(clinics[0]?.clinic_id || '')
   const [appointmentDay, setAppointmentDay] = useState(todayStr)
@@ -30,10 +36,56 @@ export function AppointmentModal({ open, onClose, onSuccess, clinics, doctors }:
   const [smsReceived, setSmsReceived] = useState(0)
   const [consultationDuration, setConsultationDuration] = useState(20)
 
+  useEffect(() => {
+    if (open) {
+      setPatientQuery('')
+      setSelectedPatient(null)
+      setPatientResults([])
+      setShowPatientResults(false)
+      setError('')
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!patientQuery.trim()) {
+      setPatientResults([])
+      setPatientSearching(false)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setPatientSearching(true)
+      try {
+        const res = await patientApi.list({ search: patientQuery.trim(), limit: 8 })
+        setPatientResults(res.items)
+      } catch {
+        setPatientResults([])
+      } finally {
+        setPatientSearching(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [patientQuery])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (patientBoxRef.current && !patientBoxRef.current.contains(e.target as Node)) {
+        setShowPatientResults(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const selectPatient = (p: Patient) => {
+    setSelectedPatient(p)
+    setPatientQuery(p.patient_id)
+    setShowPatientResults(false)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!patientId.trim()) {
-      setError('Patient ID is required')
+    if (!selectedPatient) {
+      setError('Search and select a patient from the list')
       return
     }
     if (!doctorId) {
@@ -50,7 +102,7 @@ export function AppointmentModal({ open, onClose, onSuccess, clinics, doctors }:
     try {
       await appointmentApi.create({
         appointment_id: appointmentId.trim(),
-        patient_id: patientId.trim(),
+        patient_id: selectedPatient.id,
         doctor_id: doctorId,
         clinic_id: clinicId,
         appointment_day: new Date(appointmentDay).toISOString(),
@@ -93,13 +145,46 @@ export function AppointmentModal({ open, onClose, onSuccess, clinics, doctors }:
             required
           />
 
-          <Input
-            label="Patient ID / Record Code"
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-            placeholder="e.g. P10025"
-            required
-          />
+          <div className="flex flex-col gap-1 relative" ref={patientBoxRef}>
+            <label htmlFor="patient-search" className="text-[11px] font-bold uppercase tracking-wider text-carbon-gray-70">
+              Patient
+            </label>
+            <input
+              id="patient-search"
+              value={patientQuery}
+              onChange={(e) => {
+                setPatientQuery(e.target.value)
+                setSelectedPatient(null)
+                setShowPatientResults(true)
+              }}
+              onFocus={() => setShowPatientResults(true)}
+              placeholder="Search name or ID, e.g. P10025"
+              autoComplete="off"
+              className="h-9 rounded-none border border-carbon-gray-30 bg-surface px-3 text-xs font-medium text-carbon-gray-100 placeholder:text-carbon-gray-50 transition-colors focus:border-primary-500 focus:outline-none"
+            />
+            {showPatientResults && patientQuery.trim() && (
+              <ul className="absolute z-20 top-9 mt-0.5 max-h-56 w-full overflow-auto border border-carbon-gray-30 bg-surface shadow-carbon">
+                {patientSearching && (
+                  <li className="px-3 py-2 text-[11px] text-carbon-gray-60">Searching...</li>
+                )}
+                {!patientSearching && patientResults.length === 0 && (
+                  <li className="px-3 py-2 text-[11px] text-carbon-gray-60">No patients match</li>
+                )}
+                {patientResults.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectPatient(p)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left text-xs font-medium text-carbon-gray-100 hover:bg-carbon-gray-10"
+                    >
+                      <span>{p.name}</span>
+                      <span className="font-mono text-[11px] text-carbon-gray-60">{p.patient_id}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <Select
             label="Assigned Doctor"
