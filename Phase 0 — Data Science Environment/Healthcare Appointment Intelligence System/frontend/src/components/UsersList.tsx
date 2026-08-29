@@ -25,7 +25,9 @@ export function UsersList() {
       setUsers(data || [])
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load users')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load users'
+      console.error('Failed to load users:', err)
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
