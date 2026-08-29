@@ -3,7 +3,6 @@ from bson import ObjectId
 from app.core.security import get_current_user, hash_password
 from app.db.mongodb import get_database
 from app.models.user import User
-from app.schemas.auth import UserResponse
 from app.services.auth_service import create_user, get_user_by_email, to_user_response
 from app.utils.responses import success
 from pydantic import BaseModel
