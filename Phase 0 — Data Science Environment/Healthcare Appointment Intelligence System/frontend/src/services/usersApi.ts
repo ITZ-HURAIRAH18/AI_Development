@@ -23,26 +23,26 @@ export interface UpdateUserRequest {
 
 export const usersApi = {
   async listUsers() {
-    const response = await api.get<{ data: User[] }>('/users')
+    const response = await api.get<{ data: User[] }>('/api/users')
     return response.data.data
   },
 
   async getUser(id: string) {
-    const response = await api.get<{ data: User }>(`/users/${id}`)
+    const response = await api.get<{ data: User }>(`/api/users/${id}`)
     return response.data.data
   },
 
   async createUser(data: CreateUserRequest) {
-    const response = await api.post<{ data: User }>('/users', data)
+    const response = await api.post<{ data: User }>('/api/users', data)
     return response.data.data
   },
 
   async updateUser(id: string, data: UpdateUserRequest) {
-    const response = await api.put<{ data: User }>(`/users/${id}`, data)
+    const response = await api.put<{ data: User }>(`/api/users/${id}`, data)
     return response.data.data
   },
 
   async deleteUser(id: string) {
-    await api.delete(`/users/${id}`)
+    await api.delete(`/api/users/${id}`)
   },
 }
