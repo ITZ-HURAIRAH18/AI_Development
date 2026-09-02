@@ -164,6 +164,12 @@ npm run dev
 
 The frontend runs on `http://localhost:5173` by default.
 
+> The frontend calls the backend through the `VITE_API_URL` environment variable
+> (see [`frontend/.env.example`](frontend/.env.example)). It defaults to the
+> production backend URL, so a local frontend can talk to the deployed API
+> without any extra setup. To use a locally running backend, set
+> `VITE_API_URL=http://localhost:8000` in a `frontend/.env` file.
+
 ---
 
 ## Environment Variables
@@ -462,11 +468,53 @@ All endpoints are prefixed with `/api`. Responses follow the format:
 
 ## Deployment
 
-The application is deployed on **Vercel** as a serverless function:
+The application is split into two independent Vercel deployments:
 
-- **Backend**: `api/index.py` serves as the Vercel Python serverless entry point
-- **Frontend**: Static build from `frontend/dist/` served via Vercel's CDN
-- **Routing**: `vercel.json` maps `/api/*` to the backend, everything else to the static frontend
+| App | URL | Stack |
+|---|---|---|
+| **Frontend** | `https://healthcare-intelligence.vercel.app` | React + Vite static build from `frontend/dist/` |
+| **Backend API** | `https://ai-development-coral.vercel.app` | FastAPI via `api/index.py` (Vercel Python serverless function) |
+
+The frontend talks to the backend through `VITE_API_URL`, which is set in the Vercel
+Frontend project's environment variables (defaults to `https://ai-development-coral.vercel.app`).
+
+### Frontend project (React/Vite SPA)
+
+Because the app uses React Router's client-side routing, Vercel must be told to
+fall back to `index.html` for any path that is not a real file. Otherwise, refreshing
+or directly opening a route such as `/appointments` or `/settings` returns `404: NOT_FOUND`.
+
+This is handled by SPA fallback rules:
+
+- `frontend/vercel.json` — used when the Vercel Frontend project has **Root Directory** set to `frontend`:
+  ```json
+  {
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  }
+  ```
+- `vercel.json` (project root) — used when the Frontend project's **Root Directory** is the whole
+  project folder. Its `routes` array declares `{ "handle": "filesystem" }` first (so real assets keep
+  serving normally) and then falls back every remaining path to `/index.html`.
+
+Required Vercel project settings for the Frontend:
+
+- **Framework Preset**: `Other` (or the rewrite may be ignored)
+- **Root Directory**: `frontend` (recommended) or the project root
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Environment Variables**: `VITE_API_URL=https://ai-development-coral.vercel.app`
+
+After updating the routing config, redeploy (Vercel only reads `vercel.json` at deploy time;
+existing deployments keep their old routing rules).
+
+### Backend project (FastAPI)
+
+- `api/index.py` is the Vercel Python serverless entry point for the ML backend.
+- Requires the same environment variables listed in [Environment Variables](#environment-variables)
+  (`MONGODB_URL`, `DATABASE_NAME`, `JWT_SECRET`, CORS origins, etc.).
+- Deployed with `@vercel/python`; model files (`*.pkl`) and `backend/app/**` are bundled via
+  the `includeFiles` config in `vercel.json`.
 
 ### Production URL
 
